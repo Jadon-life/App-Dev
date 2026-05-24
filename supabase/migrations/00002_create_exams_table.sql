@@ -1,4 +1,4 @@
--- PrepHQ Migration 002: Exams table
+-- CrysLearn Migration 002: Exams table
 -- Source: Document 05 — Backend Schema
 -- Stores available exam types (JAMB, WAEC, NECO, Post-UTME)
 

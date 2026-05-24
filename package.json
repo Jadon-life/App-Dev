@@ -1,8 +1,8 @@
 {
-  "name": "prephq",
+  "name": "cryslearn",
   "version": "1.0.0",
   "private": true,
-  "description": "PrepHQ — The headquarters of exam preparation in Nigeria",
+  "description": "CrysLearn — Crystal-clear learning for exam success in Nigeria",
   "workspaces": ["web", "mobile", "shared"],
   "scripts": {
     "dev:web": "npm run dev --workspace=web",

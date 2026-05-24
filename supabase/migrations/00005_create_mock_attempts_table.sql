@@ -1,4 +1,4 @@
--- PrepHQ Migration 005: Mock Attempts table
+-- CrysLearn Migration 005: Mock Attempts table
 -- Source: Document 05 — Backend Schema
 -- Records every mock exam attempt, scores, and answers
 

@@ -1,4 +1,4 @@
--- PrepHQ Complete Seed File
+-- CrysLearn Complete Seed File
 -- Run this file to seed all development data
 -- Usage: psql -f seed.sql or via Supabase Dashboard SQL Editor
 

@@ -1,5 +1,5 @@
 {
-  "name": "@prephq/shared",
+  "name": "@cryslearn/shared",
   "version": "1.0.0",
   "private": true,
   "main": "./types/index.ts",

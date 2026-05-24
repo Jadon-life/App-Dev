@@ -20,7 +20,7 @@ export default function SettingsScreen() {
           <Text style={styles.menuText}>Storage</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuText}>About PrepHQ</Text>
+          <Text style={styles.menuText}>About CrysLearn</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.menuItem, styles.logoutItem]}>
           <Text style={styles.logoutText}>Log Out</Text>

@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "PrepHQ",
-    "slug": "prephq",
+    "name": "CrysLearn",
+    "slug": "cryslearn",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "scheme": "prephq",
+    "scheme": "cryslearn",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -15,14 +15,14 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.prephq.app"
+      "bundleIdentifier": "com.cryslearn.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0D1B2A"
       },
-      "package": "com.prephq.app"
+      "package": "com.cryslearn.app"
     },
     "plugins": ["expo-router", "expo-secure-store", "expo-sqlite"]
   }

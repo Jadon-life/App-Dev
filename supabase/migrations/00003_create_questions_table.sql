@@ -1,4 +1,4 @@
--- PrepHQ Migration 003: Questions table
+-- CrysLearn Migration 003: Questions table
 -- Source: Document 05 — Backend Schema
 -- Past questions bank: JAMB, WAEC, NECO, Post-UTME going back 10+ years
 

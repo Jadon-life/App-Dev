@@ -9,10 +9,10 @@ export default function LoginScreen() {
         {/* Logo */}
         <View style={styles.logoContainer}>
           <View style={styles.logo}>
-            <Text style={styles.logoText}>P</Text>
+            <Text style={styles.logoText}>C</Text>
           </View>
-          <Text style={styles.appName}>PrepHQ</Text>
-          <Text style={styles.tagline}>The headquarters of exam preparation</Text>
+          <Text style={styles.appName}>CrysLearn</Text>
+          <Text style={styles.tagline}>Crystal-clear learning for exam success</Text>
         </View>
 
         {/* Form */}

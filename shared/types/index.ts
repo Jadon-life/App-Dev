@@ -1,4 +1,4 @@
-// PrepHQ Shared Types — Used by both /web and /mobile
+// CrysLearn Shared Types — Used by both /web and /mobile
 // Source of truth: Document 05 Backend Schema
 
 export type UserRole = "student" | "parent";

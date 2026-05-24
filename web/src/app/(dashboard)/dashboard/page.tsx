@@ -33,7 +33,7 @@ export default function DashboardPage() {
         <p className="text-gray-500 mt-1">
           {hasUnlockedExams
             ? "Continue your preparation below."
-            : "Your exam headquarters awaits. Pick your first exam to get started."}
+            : "Your learning journey begins here. Pick your first exam to get started."}
         </p>
       </div>
 
@@ -149,7 +149,7 @@ export default function DashboardPage() {
       {!isLoading && !hasUnlockedExams && (
         <div className="mt-8 text-center py-8 px-4 border border-dashed border-gray-200 rounded-card">
           <p className="text-gray-500 text-sm">
-            Your exam headquarters awaits. Pick your first exam to get started.
+            Your learning journey begins here. Pick your first exam to get started.
           </p>
         </div>
       )}

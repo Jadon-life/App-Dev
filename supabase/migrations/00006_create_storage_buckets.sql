@@ -1,4 +1,4 @@
--- PrepHQ Migration 006: Storage Buckets
+-- CrysLearn Migration 006: Storage Buckets
 -- Source: Document 05 — Backend Schema (File Storage section)
 
 -- Bucket: question-images — Diagrams, charts embedded in questions

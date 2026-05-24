@@ -1,4 +1,4 @@
-// PrepHQ Exam Constants — Source of truth for exam metadata
+// CrysLearn Exam Constants — Source of truth for exam metadata
 // Used by both web and mobile apps
 
 import type { ExamSlug } from "../types";

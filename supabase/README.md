@@ -1,4 +1,4 @@
-# PrepHQ — Supabase Database
+# CrysLearn — Supabase Database
 
 ## Setup Instructions
 
@@ -28,7 +28,7 @@ Run each seed file in order:
 2. Enable Google OAuth provider
 3. Add redirect URLs:
    - `http://localhost:3000/api/auth/callback` (web dev)
-   - `prephq://auth/callback` (mobile)
+   - `cryslearn://auth/callback` (mobile)
 
 ### Database Schema
 ```

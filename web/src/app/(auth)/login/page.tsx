@@ -65,9 +65,9 @@ function LoginForm() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
             <div className="w-10 h-10 bg-primary rounded-btn flex items-center justify-center">
-              <span className="text-white font-bold text-lg">P</span>
+              <span className="text-white font-bold text-lg">C</span>
             </div>
-            <span className="font-bold text-2xl text-primary">PrepHQ</span>
+            <span className="font-bold text-2xl text-primary">CrysLearn</span>
           </Link>
           <p className="mt-3 text-gray-500 text-sm">
             {isSignUp

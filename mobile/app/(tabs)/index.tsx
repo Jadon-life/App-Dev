@@ -15,7 +15,7 @@ export default function HomeScreen() {
         {/* Empty State — per Document 03 */}
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>📚</Text>
-          <Text style={styles.emptyTitle}>Your exam headquarters awaits</Text>
+          <Text style={styles.emptyTitle}>Your learning journey begins here</Text>
           <Text style={styles.emptyDescription}>
             Pick your first exam to get started.
           </Text>

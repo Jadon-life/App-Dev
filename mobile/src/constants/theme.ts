@@ -1,4 +1,4 @@
-// PrepHQ Design System — Document 04 (Mobile: dark-mode first)
+// CrysLearn Design System — Document 04 (Mobile: dark-mode first)
 
 export const Colors = {
   primary: "#1A3C6E",

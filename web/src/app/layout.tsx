@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "PrepHQ — The Headquarters of Exam Preparation in Nigeria",
+  title: "CrysLearn — Crystal-Clear Learning for Exam Success in Nigeria",
   description:
     "Prepare for JAMB, WAEC, NECO, and Post-UTME with timed mock exams, AI explanations, and performance tracking. Pay once, prep forever.",
   keywords: [
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     "NECO practice",
     "Post-UTME prep",
     "Nigerian exam prep",
-    "PrepHQ",
+    "CrysLearn",
   ],
 };
 

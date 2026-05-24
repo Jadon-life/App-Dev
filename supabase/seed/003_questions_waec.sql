@@ -1,4 +1,4 @@
--- PrepHQ Seed Data: WAEC Sample Questions (50 questions)
+-- CrysLearn Seed Data: WAEC Sample Questions (50 questions)
 -- Subjects: Mathematics, English Language, Physics, Chemistry, Biology
 
 -- WAEC exam ID: 22222222-2222-2222-2222-222222222222

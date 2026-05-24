@@ -1,4 +1,4 @@
--- PrepHQ Seed Data: NECO Sample Questions (50 questions)
+-- CrysLearn Seed Data: NECO Sample Questions (50 questions)
 -- Subjects: Mathematics, English Language, Physics, Chemistry, Biology
 
 -- NECO exam ID: 33333333-3333-3333-3333-333333333333

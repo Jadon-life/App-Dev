@@ -83,7 +83,7 @@ export default function ParentDashboardPage() {
           </div>
           <h1 className="text-2xl font-bold text-primary">Parent Dashboard</h1>
           <p className="text-gray-500 mt-2">
-            Link to your child&apos;s PrepHQ account to monitor their progress.
+            Link to your child&apos;s CrysLearn account to monitor their progress.
           </p>
         </div>
 

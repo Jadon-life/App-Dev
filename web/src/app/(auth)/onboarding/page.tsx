@@ -191,7 +191,7 @@ export default function OnboardingPage() {
                 Link to your child&apos;s account
               </h2>
               <p className="text-sm text-gray-500 mb-4">
-                Enter your child&apos;s PrepHQ student ID. You can find it in
+                Enter your child&apos;s CrysLearn student ID. You can find it in
                 their Settings page.
               </p>
               <input

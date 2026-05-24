@@ -49,9 +49,9 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-btn flex items-center justify-center">
-              <span className="text-white font-bold text-sm">P</span>
+              <span className="text-white font-bold text-sm">C</span>
             </div>
-            <span className="font-bold text-xl text-primary">PrepHQ</span>
+            <span className="font-bold text-xl text-primary">CrysLearn</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm text-text-light hover:text-primary transition-colors">
@@ -67,9 +67,9 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 text-center">
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-primary leading-tight">
-          The Headquarters of
+          Crystal-Clear Learning for
           <br />
-          <span className="text-secondary">Exam Preparation</span> in Nigeria
+          <span className="text-secondary">Exam Success</span> in Nigeria
         </h1>
         <p className="mt-6 text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
           Prepare for JAMB, WAEC, NECO, and Post-UTME with timed mock exams, 
@@ -145,7 +145,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-gray-100 bg-white py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
-          <p>&copy; 2025 PrepHQ. The headquarters of exam preparation in Nigeria.</p>
+          <p>&copy; 2025 CrysLearn. Crystal-clear learning for exam success in Nigeria.</p>
         </div>
       </footer>
     </div>

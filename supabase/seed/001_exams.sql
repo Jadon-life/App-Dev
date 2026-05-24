@@ -1,4 +1,4 @@
--- PrepHQ Seed Data: Exams
+-- CrysLearn Seed Data: Exams
 -- Source: Document 05 + Document 01 (pricing from PRD: ₦3,500–₦5,000 ARPU)
 
 INSERT INTO public.exams (id, slug, name, price_kobo, is_active) VALUES

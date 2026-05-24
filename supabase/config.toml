@@ -1,8 +1,8 @@
-# PrepHQ Supabase Local Development Configuration
+# CrysLearn Supabase Local Development Configuration
 # See: https://supabase.com/docs/guides/cli/config
 
 [project]
-id = "prephq"
+id = "cryslearn"
 
 [api]
 port = 54321
@@ -19,7 +19,7 @@ port = 54323
 
 [auth]
 site_url = "http://localhost:3000"
-additional_redirect_urls = ["http://localhost:3000/api/auth/callback", "prephq://auth/callback"]
+additional_redirect_urls = ["http://localhost:3000/api/auth/callback", "cryslearn://auth/callback"]
 jwt_expiry = 3600
 enable_signup = true
 

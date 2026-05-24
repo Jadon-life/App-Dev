@@ -39,10 +39,10 @@ export default function DashboardLayout({
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-btn flex items-center justify-center">
-              <span className="text-white font-bold text-sm">P</span>
+              <span className="text-white font-bold text-sm">C</span>
             </div>
             <span className="font-bold text-xl text-primary hidden sm:block">
-              PrepHQ
+              CrysLearn
             </span>
           </Link>
 

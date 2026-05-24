@@ -1,4 +1,4 @@
--- PrepHQ Migration 001: Users table
+-- CrysLearn Migration 001: Users table
 -- Source: Document 05 — Backend Schema
 -- Users are created via Supabase Auth, this extends the auth.users table
 

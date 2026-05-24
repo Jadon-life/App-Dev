@@ -1,4 +1,4 @@
-// PrepHQ Database Types — Generated from Document 05 Backend Schema
+// CrysLearn Database Types — Generated from Document 05 Backend Schema
 
 export type UserRole = "student" | "parent";
 export type ExamSlug = "jamb" | "waec" | "neco" | "post-utme";

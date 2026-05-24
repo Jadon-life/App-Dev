@@ -10,7 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // PrepHQ Design System — Document 04
+        // CrysLearn Design System — Document 04
         primary: {
           DEFAULT: "#1A3C6E",
           light: "#2E6DB4",

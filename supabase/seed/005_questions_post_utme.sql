@@ -1,4 +1,4 @@
--- PrepHQ Seed Data: Post-UTME Sample Questions (50 questions)
+-- CrysLearn Seed Data: Post-UTME Sample Questions (50 questions)
 -- Subjects: Mathematics, English Language, Physics, Chemistry, Biology, Economics, General Knowledge
 
 -- Post-UTME exam ID: 44444444-4444-4444-4444-444444444444

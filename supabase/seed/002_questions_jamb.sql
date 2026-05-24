@@ -1,4 +1,4 @@
--- PrepHQ Seed Data: JAMB Sample Questions (50 questions)
+-- CrysLearn Seed Data: JAMB Sample Questions (50 questions)
 -- Subjects: Mathematics, English Language, Physics, Chemistry, Biology
 
 -- JAMB exam ID: 11111111-1111-1111-1111-111111111111

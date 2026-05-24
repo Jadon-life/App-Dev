@@ -1,4 +1,4 @@
--- PrepHQ Migration 004: User Exam Access table
+-- CrysLearn Migration 004: User Exam Access table
 -- Source: Document 05 — Backend Schema
 -- Records which exams a user has paid for and unlocked
 
