@@ -5,18 +5,17 @@ import dynamic from "next/dynamic";
 // Dynamic imports — client-only components (Three.js/GSAP need browser APIs)
 const ReactiveBackground = dynamic(() => import("@/components/three/ReactiveBackground"), { ssr: false });
 const FloatingCrystal = dynamic(() => import("@/components/three/FloatingCrystal"), { ssr: false });
-const CinematicHero = dynamic(() => import("@/components/hero/CinematicHero"), { ssr: false });
+const GlassCarousel = dynamic(() => import("@/components/hero/GlassCarousel"), { ssr: false });
 const ScrollEngine = dynamic(() => import("@/components/animations/ScrollEngine"), { ssr: false });
 const TiltCard = dynamic(() => import("@/components/animations/TiltCard"), { ssr: false });
 const MagneticButton = dynamic(() => import("@/components/animations/MagneticButton"), { ssr: false });
 const ThemeToggle = dynamic(() => import("@/components/theme/ThemeToggle"), { ssr: false });
 const ThemeProvider = dynamic(() => import("@/components/theme/ThemeContext").then(m => ({ default: m.ThemeProvider })), { ssr: false });
 
-const exams = [
-  { name: "JAMB", description: "Unified Tertiary Matriculation Examination", price: "3,500" },
-  { name: "WAEC", description: "West African Senior School Certificate", price: "3,500" },
-  { name: "NECO", description: "National Examinations Council", price: "3,500" },
-  { name: "Post-UTME", description: "University Post-UTME Screening", price: "5,000" },
+// Only showing JAMB and WAEC for now (NECO and Post-UTME kept in codebase but hidden)
+const visibleExams = [
+  { name: "JAMB (UTME)", slug: "jamb", description: "Unified Tertiary Matriculation Examination", price: "3,500" },
+  { name: "WAEC", slug: "waec", description: "West African Senior School Certificate Examination", price: "3,500" },
 ];
 
 const features = [
@@ -31,23 +30,23 @@ const features = [
 export default function LandingPage() {
   return (
     <ThemeProvider>
-      {/* Reactive WebGL background — follows mouse, shifts with scroll */}
+      {/* Reactive WebGL background */}
       <ReactiveBackground />
 
       <ScrollEngine>
         <div className="relative min-h-screen">
           {/* ═══ NAVIGATION ═══ */}
-          <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-white/5 dark:bg-black/5 backdrop-blur-xl">
+          <nav className="fixed top-0 left-0 right-0 z-50 border-b border-indigo-200/20 dark:border-white/[0.06] bg-white/70 dark:bg-[#0c0820]/70 backdrop-blur-2xl">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 bg-gradient-to-br from-secondary to-accent-blue rounded-btn flex items-center justify-center shadow-glow">
-                  <span className="text-white font-bold text-sm">C</span>
-                </div>
-                <span className="font-bold text-xl text-primary dark:text-white">CrysLearn</span>
-              </div>
+              {/* Logo wordmark — gradient + glow, no icon box */}
+              <Link href="/" className="flex items-center">
+                <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 via-purple-500 to-blue-500 dark:from-indigo-300 dark:via-purple-300 dark:to-blue-400 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(124,58,237,0.3)]">
+                  CrysLearn
+                </span>
+              </Link>
               <div className="flex items-center gap-4">
                 <ThemeToggle />
-                <Link href="/login" className="text-sm text-text-light/60 dark:text-text-dark/60 hover:text-secondary transition-colors hidden sm:block">
+                <Link href="/login" className="text-sm text-indigo-900/70 dark:text-indigo-200/70 hover:text-purple-600 dark:hover:text-purple-300 transition-colors hidden sm:block">
                   Log in
                 </Link>
                 <MagneticButton>
@@ -59,91 +58,71 @@ export default function LandingPage() {
             </div>
           </nav>
 
-          {/* ═══ CINEMATIC HERO SECTION ═══ */}
-          <CinematicHero />
-          {/* 3D Crystal floating behind hero */}
-          <div className="absolute inset-0 top-16">
-            <FloatingCrystal />
-          </div>
-
-          {/* ═══ SUPPORTED EXAMS — Multi-layer parallax ═══ */}
-          <section className="relative py-28 overflow-hidden">
-            {/* Background layer (moves slower) */}
-            <div data-parallax-speed="0.2" className="absolute inset-0 opacity-10">
-              <div className="absolute top-10 right-10 w-64 h-64 border border-secondary/30 rounded-full" />
-              <div className="absolute bottom-10 left-10 w-48 h-48 border border-accent-blue/20 rounded-full" />
+          {/* ═══ HERO SECTION — 3D Crystal + Glass Carousel ═══ */}
+          <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
+            {/* 3D Crystal behind hero */}
+            <div className="absolute inset-0">
+              <FloatingCrystal />
             </div>
 
-            {/* Midground content */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-              <div data-scroll="fade-up" className="text-center mb-14">
-                <h2 className="text-2xl sm:text-3xl font-bold text-primary dark:text-white">
+            <div className="relative z-10 max-w-5xl mx-auto px-4 w-full">
+              {/* Headline */}
+              <div data-scroll="fade-up" className="text-center mb-12">
+                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-indigo-950 dark:text-white">
+                  Learn with Clarity.
+                  <br />
+                  <span className="bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500 dark:from-purple-400 dark:via-indigo-300 dark:to-blue-400 bg-clip-text text-transparent">
+                    Score with Confidence.
+                  </span>
+                </h1>
+                <p className="mt-5 text-base sm:text-lg text-indigo-900/60 dark:text-indigo-200/60 max-w-xl mx-auto leading-relaxed">
+                  Where exam success becomes crystal clear. Prepare for JAMB and WAEC with timed mock exams, AI explanations, and performance tracking.
+                </p>
+                <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                  <MagneticButton>
+                    <Link href="/login" className="btn-primary text-base px-8 py-3.5">
+                      Start Preparing
+                    </Link>
+                  </MagneticButton>
+                  <MagneticButton>
+                    <a href="#features" className="btn-secondary text-base px-8 py-3.5">
+                      Explore Features
+                    </a>
+                  </MagneticButton>
+                </div>
+              </div>
+
+              {/* Glassmorphism Carousel */}
+              <div data-scroll="fade-up">
+                <GlassCarousel />
+              </div>
+            </div>
+          </section>
+
+          {/* ═══ SUPPORTED EXAMS ═══ */}
+          <section className="relative py-24 overflow-hidden">
+            <div data-parallax-speed="0.2" className="absolute inset-0 opacity-[0.06] dark:opacity-[0.08]">
+              <div className="absolute top-10 right-10 w-64 h-64 border border-purple-500 rounded-full" />
+              <div className="absolute bottom-10 left-10 w-48 h-48 border border-blue-500 rounded-full" />
+            </div>
+
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+              <div data-scroll="fade-up" className="text-center mb-12">
+                <h2 className="text-2xl sm:text-3xl font-bold text-indigo-950 dark:text-white">
                   Supported Exams
                 </h2>
-                <p className="text-text-light/50 dark:text-text-dark/50 mt-2">All the exams you need, in one place</p>
+                <p className="text-indigo-900/50 dark:text-indigo-200/50 mt-2">All the exams you need, in one place</p>
               </div>
-              <div data-stagger="true" className="grid grid-cols-2 md:grid-cols-4 gap-5">
-                {exams.map((exam) => (
-                  <TiltCard key={exam.name}>
-                    <div className="card-gradient text-center h-full">
-                      <h3 className="font-bold text-xl text-primary dark:text-white">{exam.name}</h3>
-                      <p className="text-sm text-text-light/50 dark:text-text-dark/50 mt-2">{exam.description}</p>
-                    </div>
-                  </TiltCard>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* ═══ FEATURES — Scroll-pinned reveal ═══ */}
-          <section id="features" data-pin="true" className="relative min-h-screen flex items-center bg-gradient-subtle dark:bg-transparent py-28">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-              <div data-pin-animate="fade-scale" className="text-center mb-14">
-                <h2 className="text-2xl sm:text-3xl font-bold text-primary dark:text-white">
-                  Everything You Need to Score High
-                </h2>
-                <p className="text-text-light/50 dark:text-text-dark/50 mt-2">Powerful tools designed for Nigerian students</p>
-              </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {features.map((feature, i) => (
-                  <div key={feature.title} data-pin-animate="slide-up">
-                    <TiltCard>
-                      <div className="card h-full group">
-                        <div className="w-12 h-12 bg-gradient-to-br from-secondary/10 to-accent-blue/10 rounded-card flex items-center justify-center mb-4 group-hover:shadow-glow transition-shadow duration-500">
-                          <feature.icon className="w-6 h-6 text-secondary" />
-                        </div>
-                        <h3 className="font-semibold text-lg text-text-light dark:text-text-dark">{feature.title}</h3>
-                        <p className="text-text-light/50 dark:text-text-dark/50 mt-2 text-sm leading-relaxed">{feature.description}</p>
-                      </div>
-                    </TiltCard>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* ═══ PRICING — Parallax depth layers ═══ */}
-          <section className="relative py-28 overflow-hidden">
-            <div data-parallax-speed="0.15" className="absolute top-0 left-0 w-full h-full opacity-5">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-secondary rounded-full" />
-            </div>
-
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-              <div data-scroll="fade-up" className="text-center mb-14">
-                <h2 className="text-2xl sm:text-3xl font-bold text-primary dark:text-white">
-                  Simple, One-Time Pricing
-                </h2>
-                <p className="text-text-light/50 dark:text-text-dark/50 mt-2">
-                  No subscriptions. Pay once and get lifetime access.
-                </p>
-              </div>
-              <div data-stagger="true" className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-4xl mx-auto">
-                {exams.map((exam) => (
-                  <TiltCard key={exam.name}>
-                    <div className="card text-center border-2 border-purple-100/50 dark:border-white/5 hover:border-secondary/40 hover:shadow-glow transition-all duration-500 h-full">
-                      <h3 className="font-bold text-primary dark:text-white text-lg">{exam.name}</h3>
-                      <p className="text-3xl font-extrabold text-gradient mt-3">&#8358;{exam.price}</p>
-                      <p className="text-sm text-text-light/40 dark:text-text-dark/40 mt-1">one-time payment</p>
+              <div data-stagger="true" className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                {visibleExams.map((exam) => (
+                  <TiltCard key={exam.slug}>
+                    <div className="relative overflow-hidden rounded-2xl border border-indigo-200/40 dark:border-white/[0.08] bg-white/60 dark:bg-white/[0.04] backdrop-blur-xl p-8 text-center shadow-lg dark:shadow-purple-900/10 hover:border-purple-400/50 dark:hover:border-purple-500/30 hover:shadow-purple-500/10 transition-all duration-500">
+                      <h3 className="font-bold text-2xl text-indigo-950 dark:text-white">{exam.name}</h3>
+                      <p className="text-sm text-indigo-800/50 dark:text-indigo-200/50 mt-2">{exam.description}</p>
+                      <p className="text-3xl font-extrabold mt-4 bg-gradient-to-r from-purple-600 to-blue-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+                        &#8358;{exam.price}
+                      </p>
+                      <p className="text-xs text-indigo-800/40 dark:text-indigo-300/40 mt-1">one-time payment</p>
                       <MagneticButton>
                         <Link href="/login" className="btn-primary w-full mt-5 text-sm">
                           Unlock {exam.name}
@@ -156,8 +135,36 @@ export default function LandingPage() {
             </div>
           </section>
 
+          {/* ═══ FEATURES ═══ */}
+          <section id="features" data-pin="true" className="relative min-h-screen flex items-center py-28">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+              <div data-pin-animate="fade-scale" className="text-center mb-14">
+                <h2 className="text-2xl sm:text-3xl font-bold text-indigo-950 dark:text-white">
+                  Everything You Need to Score High
+                </h2>
+                <p className="text-indigo-900/50 dark:text-indigo-200/50 mt-2">Powerful tools designed for Nigerian students</p>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {features.map((feature) => (
+                  <div key={feature.title} data-pin-animate="slide-up">
+                    <TiltCard>
+                      <div className="rounded-2xl border border-indigo-200/30 dark:border-white/[0.06] bg-white/70 dark:bg-white/[0.03] backdrop-blur-xl p-6 h-full group hover:border-purple-400/40 dark:hover:border-purple-500/20 hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-500">
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 dark:from-purple-500/20 dark:to-blue-500/20 flex items-center justify-center mb-4 group-hover:shadow-[0_0_16px_rgba(124,58,237,0.2)] transition-shadow duration-500">
+                          <feature.icon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <h3 className="font-semibold text-base text-indigo-950 dark:text-white">{feature.title}</h3>
+                        <p className="text-indigo-800/50 dark:text-indigo-200/50 mt-2 text-sm leading-relaxed">{feature.description}</p>
+                      </div>
+                    </TiltCard>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
           {/* ═══ CTA SECTION ═══ */}
-          <section data-scroll="scale-in" className="bg-gradient-hero py-24 relative overflow-hidden">
+          <section data-scroll="scale-in" className="relative py-24 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 dark:from-[#0c0820] dark:via-purple-950 dark:to-indigo-950" />
             <div className="absolute inset-0 opacity-20">
               <div className="absolute top-10 left-10 w-2 h-2 bg-white rounded-full animate-float" />
               <div className="absolute top-32 right-20 w-1.5 h-1.5 bg-purple-300 rounded-full animate-float" style={{ animationDelay: "1s" }} />
@@ -167,11 +174,11 @@ export default function LandingPage() {
               <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">
                 Ready to ace your exams?
               </h2>
-              <p className="text-white/50 mb-10 text-lg">
+              <p className="text-indigo-200/60 mb-10 text-lg">
                 Join thousands of students preparing smarter with CrysLearn.
               </p>
               <MagneticButton>
-                <Link href="/login" className="inline-flex items-center gap-2 bg-white text-primary font-bold px-10 py-4 rounded-btn hover:shadow-elevated transition-all duration-300 text-lg">
+                <Link href="/login" className="inline-flex items-center gap-2 bg-white text-indigo-900 font-bold px-10 py-4 rounded-xl hover:shadow-[0_0_30px_rgba(124,58,237,0.3)] transition-all duration-300 text-lg">
                   Get Started Free
                 </Link>
               </MagneticButton>
@@ -179,16 +186,13 @@ export default function LandingPage() {
           </section>
 
           {/* ═══ FOOTER ═══ */}
-          <footer className="border-t border-purple-100/50 dark:border-white/5 bg-white/50 dark:bg-black/20 backdrop-blur-sm py-12">
+          <footer className="border-t border-indigo-200/20 dark:border-white/[0.05] bg-white/50 dark:bg-[#0c0820]/50 backdrop-blur-sm py-10">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-              <div className="flex items-center justify-center gap-2.5 mb-3">
-                <div className="w-7 h-7 bg-gradient-to-br from-secondary to-accent-blue rounded-btn flex items-center justify-center">
-                  <span className="text-white font-bold text-xs">C</span>
-                </div>
-                <span className="font-bold text-lg text-primary dark:text-white">CrysLearn</span>
-              </div>
-              <p className="text-sm text-text-light/40 dark:text-text-dark/40">
-                &copy; 2025 CrysLearn. Where exam success becomes crystal clear.
+              <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 via-purple-500 to-blue-500 dark:from-indigo-300 dark:via-purple-300 dark:to-blue-400 bg-clip-text text-transparent">
+                CrysLearn
+              </span>
+              <p className="text-sm text-indigo-800/40 dark:text-indigo-300/40 mt-2">
+                &copy; 2026 CrysLearn. Where exam success becomes crystal clear.
               </p>
             </div>
           </footer>

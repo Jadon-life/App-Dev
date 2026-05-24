@@ -10,66 +10,65 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // CrysLearn Design System — Blue-Purple Luxury Blend
+        // CrysLearn — Blue/Purple Luxury (adaptive contrast)
         primary: {
-          DEFAULT: "#1E1B4B", // Deep indigo-navy (luxurious dark)
-          light: "#312E81",   // Indigo mid-tone
+          DEFAULT: "#1a1145", // Deep indigo for headings (light mode)
+          light: "#312E81",
         },
         secondary: {
-          DEFAULT: "#7C3AED", // Vibrant purple (main accent / CTAs)
-          light: "#8B5CF6",   // Lighter purple for hover states
+          DEFAULT: "#7C3AED", // Vibrant purple accent
+          light: "#8B5CF6",
         },
         accent: {
-          blue: "#3B82F6",    // Electric blue for highlights
-          purple: "#A855F7",  // Soft purple for gradients
-          indigo: "#6366F1",  // Indigo bridge between blue and purple
+          blue: "#3B82F6",
+          purple: "#A855F7",
+          indigo: "#6366F1",
         },
         background: {
-          light: "#F8F7FF",   // Very subtle lavender-white
-          dark: "#0F0A1E",    // Deep dark purple-black (luxury dark mode)
+          light: "#F6F5FF",  // Crisp lavender-white
+          dark: "#09061A",   // Deep midnight
         },
         text: {
-          light: "#1E1B4B",   // Deep indigo for readability
-          dark: "#F1F0FF",    // Soft lavender-white
+          light: "#1a1145",  // High-contrast dark indigo
+          dark: "#EDE9FF",   // High-contrast light lavender
         },
         surface: {
           light: "#FFFFFF",
-          dark: "#1A1533",    // Elevated dark surface
+          dark: "#110D24",
         },
-        success: "#10B981",   // Emerald green
-        warning: "#F59E0B",   // Warm amber
-        danger: "#EF4444",    // Clear red
-        correct: "#06B6D4",   // Cyan for correct answers
+        success: "#10B981",
+        warning: "#F59E0B",
+        danger: "#EF4444",
+        correct: "#06B6D4",
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
       },
       borderRadius: {
-        card: "16px",   // Slightly more rounded for luxury feel
-        btn: "10px",    // Softer button radius
+        card: "16px",
+        btn: "12px",
         pill: "9999px",
       },
       boxShadow: {
         subtle: "0 1px 4px rgba(0,0,0,0.06)",
-        glow: "0 0 20px rgba(124, 58, 237, 0.15)",        // Purple glow
-        "glow-lg": "0 0 40px rgba(124, 58, 237, 0.2)",    // Stronger purple glow
-        card: "0 4px 24px rgba(30, 27, 75, 0.08)",        // Elegant card shadow
-        elevated: "0 8px 32px rgba(30, 27, 75, 0.12)",    // Premium elevation
+        glow: "0 0 20px rgba(124, 58, 237, 0.2)",
+        "glow-lg": "0 0 40px rgba(124, 58, 237, 0.3)",
+        card: "0 4px 24px rgba(30, 27, 75, 0.06)",
+        elevated: "0 8px 32px rgba(30, 27, 75, 0.1)",
       },
       backgroundImage: {
-        "gradient-primary": "linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)",
+        "gradient-primary": "linear-gradient(135deg, #1a1145 0%, #312E81 100%)",
         "gradient-accent": "linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%)",
-        "gradient-hero": "linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4C1D95 100%)",
-        "gradient-card": "linear-gradient(135deg, rgba(124,58,237,0.05) 0%, rgba(59,130,246,0.05) 100%)",
-        "gradient-subtle": "linear-gradient(135deg, #F8F7FF 0%, #EDE9FE 100%)",
+        "gradient-hero": "linear-gradient(135deg, #1a1145 0%, #312E81 50%, #4C1D95 100%)",
+        "gradient-subtle": "linear-gradient(135deg, #F6F5FF 0%, #EDE9FE 100%)",
       },
       minHeight: {
         touch: "44px",
       },
       animation: {
-        "shimmer": "shimmer 2s infinite linear",
-        "float": "float 6s ease-in-out infinite",
+        shimmer: "shimmer 2s infinite linear",
+        float: "float 6s ease-in-out infinite",
       },
       keyframes: {
         shimmer: {

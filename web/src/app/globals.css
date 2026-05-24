@@ -5,119 +5,152 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400&display=swap');
 
 @layer base {
+  /* ─── LIGHT THEME: Crisp indigo/lavender, premium feel ─── */
   :root {
-    --background: #F8F7FF;
-    --foreground: #1E1B4B;
+    --background: #F6F5FF;
+    --foreground: #1a1145;
+    --surface: #FFFFFF;
+    --muted: rgba(30, 27, 75, 0.5);
   }
 
+  /* ─── DARK THEME: Deep midnight, connected purples ─── */
   .dark {
-    --background: #0F0A1E;
-    --foreground: #F1F0FF;
+    --background: #09061A;
+    --foreground: #EDE9FF;
+    --surface: rgba(255, 255, 255, 0.03);
+    --muted: rgba(224, 218, 255, 0.5);
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
-    @apply font-sans antialiased transition-colors duration-500;
+    @apply font-sans antialiased;
     background: var(--background);
     color: var(--foreground);
+    transition: background-color 0.6s ease, color 0.4s ease;
   }
 
-  /* Smooth theme transition on all elements */
-  *, *::before, *::after {
-    transition: background-color 0.5s ease, border-color 0.5s ease, color 0.3s ease;
+  /* Smooth transitions only on bg and color — not ALL properties */
+  * {
+    transition-property: background-color, border-color, color, box-shadow;
+    transition-duration: 0.4s;
+    transition-timing-function: ease;
   }
 
-  /* Custom scrollbar for luxury feel */
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: rgba(124, 58, 237, 0.3);
-    border-radius: 3px;
+    background: rgba(139, 92, 246, 0.25);
+    border-radius: 10px;
   }
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(124, 58, 237, 0.5);
-  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.5); }
 }
 
 @layer components {
-  /* ─── BUTTONS ──────────────────────────────────── */
+  /* ─── PRIMARY BUTTON: gradient with glow ─── */
   .btn-primary {
-    @apply bg-gradient-to-r from-secondary to-accent-indigo text-white rounded-btn min-h-touch px-6 py-3 font-semibold
-           hover:shadow-glow hover:scale-[1.02] active:scale-[0.98]
+    @apply text-white rounded-xl min-h-touch px-6 py-3 font-semibold
+           hover:scale-[1.02] active:scale-[0.98]
            transition-all duration-200 inline-flex items-center justify-center;
+    background: linear-gradient(135deg, #7C3AED 0%, #4F46E5 50%, #3B82F6 100%);
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.25);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 8px 32px rgba(124, 58, 237, 0.4);
   }
 
+  /* ─── SECONDARY BUTTON ─── */
   .btn-secondary {
-    @apply border border-secondary/30 text-secondary bg-secondary/5 rounded-btn min-h-touch px-6 py-3 font-semibold
-           hover:bg-secondary/10 hover:border-secondary/50
+    @apply rounded-xl min-h-touch px-6 py-3 font-semibold
+           hover:scale-[1.02] active:scale-[0.98]
            transition-all duration-200 inline-flex items-center justify-center;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    color: #7C3AED;
+    background: rgba(139, 92, 246, 0.05);
+  }
+  .dark .btn-secondary {
+    border-color: rgba(167, 139, 250, 0.3);
+    color: #C4B5FD;
+    background: rgba(139, 92, 246, 0.08);
+  }
+  .btn-secondary:hover {
+    border-color: rgba(139, 92, 246, 0.5);
+    background: rgba(139, 92, 246, 0.1);
   }
 
-  /* ─── CARDS ────────────────────────────────────── */
+  /* ─── CARDS ─── */
   .card {
-    @apply bg-white rounded-card shadow-card p-6 border border-purple-100/50
-           hover:shadow-elevated transition-shadow duration-300;
+    @apply rounded-2xl p-6;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(99, 102, 241, 0.12);
+    box-shadow: 0 4px 24px rgba(30, 27, 75, 0.06);
+    backdrop-filter: blur(20px);
   }
-
-  .card-glass {
-    @apply bg-white/70 backdrop-blur-xl rounded-card shadow-card p-6 border border-purple-100/30;
+  .dark .card {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
   }
 
   .card-gradient {
-    @apply bg-gradient-card rounded-card shadow-card p-6 border border-purple-100/30;
+    @apply rounded-2xl p-6;
+    background: linear-gradient(135deg, rgba(139,92,246,0.04) 0%, rgba(59,130,246,0.04) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.12);
+    backdrop-filter: blur(20px);
+  }
+  .dark .card-gradient {
+    background: linear-gradient(135deg, rgba(139,92,246,0.06) 0%, rgba(59,130,246,0.06) 100%);
+    border-color: rgba(255, 255, 255, 0.06);
   }
 
-  /* ─── INPUTS ───────────────────────────────────── */
+  /* ─── INPUTS ─── */
   .input-field {
-    @apply w-full border border-purple-200/50 rounded-btn px-4 py-3 text-sm bg-white
-           focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary
-           transition-all duration-200 placeholder:text-gray-400;
+    @apply w-full rounded-xl px-4 py-3 text-sm
+           focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500
+           transition-all duration-200 placeholder:text-indigo-400/40;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: rgba(255, 255, 255, 0.8);
+    color: #1a1145;
+  }
+  .dark .input-field {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #EDE9FF;
+    placeholder-color: rgba(199, 190, 255, 0.4);
   }
 
-  /* ─── EXAM-SPECIFIC ────────────────────────────── */
+  /* ─── EXAM COMPONENTS ─── */
   .correct-answer {
-    @apply border-l-4 border-l-success bg-success/5 rounded-btn p-4;
+    @apply border-l-4 border-l-emerald-500 rounded-xl p-4;
+    background: rgba(16, 185, 129, 0.06);
   }
-
   .wrong-answer {
-    @apply border-l-4 border-l-danger bg-danger/5 rounded-btn p-4;
+    @apply border-l-4 border-l-red-500 rounded-xl p-4;
+    background: rgba(239, 68, 68, 0.06);
   }
-
   .exam-timer {
-    @apply sticky top-0 z-50 bg-white/90 backdrop-blur-sm border-b border-purple-100/50 px-4 py-2 text-center font-mono;
+    @apply sticky top-0 z-50 backdrop-blur-xl px-4 py-2 text-center font-mono;
+    background: rgba(255, 255, 255, 0.85);
+    border-bottom: 1px solid rgba(99, 102, 241, 0.1);
   }
-
+  .dark .exam-timer {
+    background: rgba(9, 6, 26, 0.85);
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+  }
   .exam-timer.urgent {
-    @apply text-danger animate-pulse bg-danger/5;
+    @apply text-red-500 animate-pulse;
+    background: rgba(239, 68, 68, 0.05);
   }
 
-  /* ─── BADGES & PILLS ───────────────────────────── */
-  .badge-success {
-    @apply text-xs font-semibold text-success bg-success/10 px-2.5 py-1 rounded-pill;
-  }
-
-  .badge-warning {
-    @apply text-xs font-semibold text-warning bg-warning/10 px-2.5 py-1 rounded-pill;
-  }
-
-  .badge-purple {
-    @apply text-xs font-semibold text-secondary bg-secondary/10 px-2.5 py-1 rounded-pill;
-  }
-
-  /* ─── LUXURY TOUCHES ───────────────────────────── */
-  .shimmer-bg {
-    @apply bg-gradient-to-r from-purple-100/0 via-purple-100/50 to-purple-100/0
-           bg-[length:200%_100%] animate-shimmer;
-  }
-
-  .glow-border {
-    @apply border border-secondary/20 shadow-glow;
-  }
-
+  /* ─── UTILITY CLASSES ─── */
   .text-gradient {
-    @apply bg-gradient-to-r from-secondary to-accent-blue bg-clip-text text-transparent;
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #7C3AED, #3B82F6);
+  }
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
   }
 }

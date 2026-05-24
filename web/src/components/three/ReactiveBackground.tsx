@@ -50,30 +50,30 @@ const fragmentShader = `
   varying float vElevation;
   
   void main() {
-    // Dark mode colors
-    vec3 darkBase = vec3(0.02, 0.01, 0.08);
-    vec3 darkPurple = vec3(0.15, 0.03, 0.3);
-    vec3 darkIndigo = vec3(0.04, 0.02, 0.18);
+    // Dark mode: #09061A base — deep midnight with subtle purple hints
+    vec3 darkBase = vec3(0.035, 0.024, 0.102);
+    vec3 darkPurple = vec3(0.08, 0.02, 0.18);
+    vec3 darkIndigo = vec3(0.04, 0.025, 0.12);
     
-    // Light mode colors
-    vec3 lightBase = vec3(0.97, 0.96, 1.0);
-    vec3 lightPurple = vec3(0.88, 0.85, 0.98);
-    vec3 lightIndigo = vec3(0.92, 0.93, 1.0);
+    // Light mode: #F6F5FF base — crisp lavender-white, NOT washed out
+    vec3 lightBase = vec3(0.965, 0.96, 1.0);
+    vec3 lightPurple = vec3(0.92, 0.90, 0.99);
+    vec3 lightIndigo = vec3(0.94, 0.94, 1.0);
     
-    // Mix based on theme
+    // Smooth mix based on theme (uDark transitions 0→1)
     vec3 base = mix(lightBase, darkBase, uDark);
     vec3 purple = mix(lightPurple, darkPurple, uDark);
     vec3 indigo = mix(lightIndigo, darkIndigo, uDark);
     
-    float scrollMix = uScroll * 0.4;
+    float scrollMix = uScroll * 0.3;
     vec3 color1 = mix(base, indigo, scrollMix);
     vec3 color2 = mix(purple, base, scrollMix);
     
-    vec3 color = mix(color1, color2, vUv.y + sin(uTime * 0.2) * 0.08);
+    vec3 color = mix(color1, color2, vUv.y + sin(uTime * 0.15) * 0.05);
     
-    // Glow at mouse position (where mesh is elevated)
-    float glowStrength = mix(0.8, 1.5, uDark);
-    color += vec3(0.2, 0.05, 0.35) * max(vElevation * glowStrength, 0.0);
+    // Subtle glow at mouse (reduced intensity so text stays readable)
+    float glowStrength = mix(0.4, 0.8, uDark);
+    color += vec3(0.12, 0.03, 0.2) * max(vElevation * glowStrength, 0.0);
     
     gl_FragColor = vec4(color, 1.0);
   }
