@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 
 // Dynamic imports — client-only components (Three.js/GSAP need browser APIs)
 const ReactiveBackground = dynamic(() => import("@/components/three/ReactiveBackground"), { ssr: false });
+const FloatingCrystal = dynamic(() => import("@/components/three/FloatingCrystal"), { ssr: false });
 const CinematicHero = dynamic(() => import("@/components/hero/CinematicHero"), { ssr: false });
 const ScrollEngine = dynamic(() => import("@/components/animations/ScrollEngine"), { ssr: false });
 const TiltCard = dynamic(() => import("@/components/animations/TiltCard"), { ssr: false });
@@ -60,6 +61,10 @@ export default function LandingPage() {
 
           {/* ═══ CINEMATIC HERO SECTION ═══ */}
           <CinematicHero />
+          {/* 3D Crystal floating behind hero */}
+          <div className="absolute inset-0 top-16">
+            <FloatingCrystal />
+          </div>
 
           {/* ═══ SUPPORTED EXAMS — Multi-layer parallax ═══ */}
           <section className="relative py-28 overflow-hidden">
