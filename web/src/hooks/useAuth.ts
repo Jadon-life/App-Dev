@@ -20,13 +20,16 @@ export function useAuth() {
   const router = useRouter();
 
   useEffect(() => {
-    // Get initial session
+    // Get initial session (safely — won't crash if Supabase isn't configured)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setAuthState({
         user: session?.user ?? null,
         session,
         loading: false,
       });
+    }).catch(() => {
+      // Supabase not configured — that's okay for preview
+      setAuthState({ user: null, session: null, loading: false });
     });
 
     // Listen for auth changes

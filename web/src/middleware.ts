@@ -15,6 +15,12 @@ const protectedRoutes = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Skip auth check if Supabase isn't configured (preview/demo mode)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl || supabaseUrl.includes("placeholder")) {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({
     request: { headers: request.headers },
   });

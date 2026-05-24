@@ -1,12 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key";
 
 /**
  * Browser-side Supabase client (used in Client Components)
  * Uses the anon key — RLS policies apply
+ * Note: Falls back to placeholder values so the app doesn't crash
+ * when env vars aren't set (e.g., during preview deployments)
  */
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
