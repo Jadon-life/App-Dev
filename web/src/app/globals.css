@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap');
+
+@layer base {
+  :root {
+    --background: #F5F7FA;
+    --foreground: #1C1C1E;
+  }
+
+  .dark {
+    --background: #0D1B2A;
+    --foreground: #F1F1F1;
+  }
+
+  body {
+    @apply bg-background-light text-text-light font-sans antialiased;
+  }
+
+  .dark body {
+    @apply bg-background-dark text-text-dark;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-secondary text-white rounded-btn min-h-touch px-6 py-3 font-medium
+           hover:bg-primary transition-colors duration-200 inline-flex items-center justify-center;
+  }
+
+  .btn-secondary {
+    @apply border border-secondary text-secondary bg-transparent rounded-btn min-h-touch px-6 py-3 font-medium
+           hover:bg-secondary/10 transition-colors duration-200 inline-flex items-center justify-center;
+  }
+
+  .card {
+    @apply bg-white rounded-card shadow-subtle p-6 border border-gray-100;
+  }
+
+  .input-field {
+    @apply w-full border border-gray-200 rounded-card px-4 py-3 text-sm
+           focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary
+           transition-all duration-200;
+  }
+
+  .correct-answer {
+    @apply border-l-4 border-l-success bg-correct/10 rounded-btn p-4;
+  }
+
+  .wrong-answer {
+    @apply border-l-4 border-l-danger bg-danger/10 rounded-btn p-4;
+  }
+
+  .exam-timer {
+    @apply sticky top-0 z-50 bg-white/90 backdrop-blur-sm border-b px-4 py-2 text-center font-mono;
+  }
+
+  .exam-timer.urgent {
+    @apply text-danger animate-pulse;
+  }
+}
