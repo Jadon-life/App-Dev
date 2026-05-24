@@ -2,17 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400&display=swap');
 
 @layer base {
   :root {
-    --background: #F5F7FA;
-    --foreground: #1C1C1E;
+    --background: #F8F7FF;
+    --foreground: #1E1B4B;
   }
 
   .dark {
-    --background: #0D1B2A;
-    --foreground: #F1F1F1;
+    --background: #0F0A1E;
+    --foreground: #F1F0FF;
   }
 
   body {
@@ -22,42 +22,99 @@
   .dark body {
     @apply bg-background-dark text-text-dark;
   }
+
+  /* Custom scrollbar for luxury feel */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(124, 58, 237, 0.3);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(124, 58, 237, 0.5);
+  }
 }
 
 @layer components {
+  /* ─── BUTTONS ──────────────────────────────────── */
   .btn-primary {
-    @apply bg-secondary text-white rounded-btn min-h-touch px-6 py-3 font-medium
-           hover:bg-primary transition-colors duration-200 inline-flex items-center justify-center;
+    @apply bg-gradient-to-r from-secondary to-accent-indigo text-white rounded-btn min-h-touch px-6 py-3 font-semibold
+           hover:shadow-glow hover:scale-[1.02] active:scale-[0.98]
+           transition-all duration-200 inline-flex items-center justify-center;
   }
 
   .btn-secondary {
-    @apply border border-secondary text-secondary bg-transparent rounded-btn min-h-touch px-6 py-3 font-medium
-           hover:bg-secondary/10 transition-colors duration-200 inline-flex items-center justify-center;
+    @apply border border-secondary/30 text-secondary bg-secondary/5 rounded-btn min-h-touch px-6 py-3 font-semibold
+           hover:bg-secondary/10 hover:border-secondary/50
+           transition-all duration-200 inline-flex items-center justify-center;
   }
 
+  /* ─── CARDS ────────────────────────────────────── */
   .card {
-    @apply bg-white rounded-card shadow-subtle p-6 border border-gray-100;
+    @apply bg-white rounded-card shadow-card p-6 border border-purple-100/50
+           hover:shadow-elevated transition-shadow duration-300;
   }
 
+  .card-glass {
+    @apply bg-white/70 backdrop-blur-xl rounded-card shadow-card p-6 border border-purple-100/30;
+  }
+
+  .card-gradient {
+    @apply bg-gradient-card rounded-card shadow-card p-6 border border-purple-100/30;
+  }
+
+  /* ─── INPUTS ───────────────────────────────────── */
   .input-field {
-    @apply w-full border border-gray-200 rounded-card px-4 py-3 text-sm
-           focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary
-           transition-all duration-200;
+    @apply w-full border border-purple-200/50 rounded-btn px-4 py-3 text-sm bg-white
+           focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary
+           transition-all duration-200 placeholder:text-gray-400;
   }
 
+  /* ─── EXAM-SPECIFIC ────────────────────────────── */
   .correct-answer {
-    @apply border-l-4 border-l-success bg-correct/10 rounded-btn p-4;
+    @apply border-l-4 border-l-success bg-success/5 rounded-btn p-4;
   }
 
   .wrong-answer {
-    @apply border-l-4 border-l-danger bg-danger/10 rounded-btn p-4;
+    @apply border-l-4 border-l-danger bg-danger/5 rounded-btn p-4;
   }
 
   .exam-timer {
-    @apply sticky top-0 z-50 bg-white/90 backdrop-blur-sm border-b px-4 py-2 text-center font-mono;
+    @apply sticky top-0 z-50 bg-white/90 backdrop-blur-sm border-b border-purple-100/50 px-4 py-2 text-center font-mono;
   }
 
   .exam-timer.urgent {
-    @apply text-danger animate-pulse;
+    @apply text-danger animate-pulse bg-danger/5;
+  }
+
+  /* ─── BADGES & PILLS ───────────────────────────── */
+  .badge-success {
+    @apply text-xs font-semibold text-success bg-success/10 px-2.5 py-1 rounded-pill;
+  }
+
+  .badge-warning {
+    @apply text-xs font-semibold text-warning bg-warning/10 px-2.5 py-1 rounded-pill;
+  }
+
+  .badge-purple {
+    @apply text-xs font-semibold text-secondary bg-secondary/10 px-2.5 py-1 rounded-pill;
+  }
+
+  /* ─── LUXURY TOUCHES ───────────────────────────── */
+  .shimmer-bg {
+    @apply bg-gradient-to-r from-purple-100/0 via-purple-100/50 to-purple-100/0
+           bg-[length:200%_100%] animate-shimmer;
+  }
+
+  .glow-border {
+    @apply border border-secondary/20 shadow-glow;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-secondary to-accent-blue bg-clip-text text-transparent;
   }
 }

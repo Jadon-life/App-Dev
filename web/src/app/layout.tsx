@@ -3,9 +3,9 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "CrysLearn — Crystal-Clear Learning for Exam Success in Nigeria",
+  title: "CrysLearn — Learn with Clarity. Score with Confidence.",
   description:
-    "Prepare for JAMB, WAEC, NECO, and Post-UTME with timed mock exams, AI explanations, and performance tracking. Pay once, prep forever.",
+    "Where exam success becomes crystal clear. Prepare for JAMB, WAEC, NECO, and Post-UTME with timed mock exams, AI explanations, and performance tracking.",
   keywords: [
     "JAMB preparation",
     "WAEC past questions",

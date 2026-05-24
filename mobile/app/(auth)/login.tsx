@@ -12,7 +12,7 @@ export default function LoginScreen() {
             <Text style={styles.logoText}>C</Text>
           </View>
           <Text style={styles.appName}>CrysLearn</Text>
-          <Text style={styles.tagline}>Crystal-clear learning for exam success</Text>
+          <Text style={styles.tagline}>Learn with clarity. Score with confidence.</Text>
         </View>
 
         {/* Form */}

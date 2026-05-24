@@ -1,6 +1,6 @@
 # CrysLearn
 
-> Crystal-clear learning for exam success in Nigeria.
+> Learn with clarity. Score with confidence..
 
 CrysLearn is a mobile-first exam preparation platform for Nigerian students preparing for JAMB, WAEC, NECO, and Post-UTME exams.
 

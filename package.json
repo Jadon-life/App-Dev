@@ -2,7 +2,7 @@
   "name": "cryslearn",
   "version": "1.0.0",
   "private": true,
-  "description": "CrysLearn — Crystal-clear learning for exam success in Nigeria",
+  "description": "CrysLearn — Learn with clarity. Score with confidence.",
   "workspaces": ["web", "mobile", "shared"],
   "scripts": {
     "dev:web": "npm run dev --workspace=web",
