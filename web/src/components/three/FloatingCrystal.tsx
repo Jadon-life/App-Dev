@@ -1,95 +1,77 @@
 "use client";
 
-import { useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { MeshDistortMaterial, Float, Environment } from "@react-three/drei";
-import * as THREE from "three";
-
-function Crystal() {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y = state.clock.elapsedTime * 0.3;
-      meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.2) * 0.1;
-    }
-  });
-
-  return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-      <mesh ref={meshRef} scale={2.2}>
-        <octahedronGeometry args={[1, 0]} />
-        <MeshDistortMaterial
-          color="#7C3AED"
-          roughness={0.1}
-          metalness={0.8}
-          distort={0.2}
-          speed={2}
-          envMapIntensity={1}
-        />
-      </mesh>
-      {/* Inner glow */}
-      <mesh scale={1.8}>
-        <octahedronGeometry args={[1, 0]} />
-        <meshBasicMaterial color="#A855F7" transparent opacity={0.15} wireframe />
-      </mesh>
-      {/* Outer ring */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} scale={3}>
-        <torusGeometry args={[1, 0.02, 16, 100]} />
-        <meshBasicMaterial color="#3B82F6" transparent opacity={0.4} />
-      </mesh>
-    </Float>
-  );
-}
-
-function Particles() {
-  const particlesRef = useRef<THREE.Points>(null);
-  const count = 200;
-
-  const positions = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * 15;
-    positions[i * 3 + 1] = (Math.random() - 0.5) * 15;
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 15;
-  }
-
-  useFrame((state) => {
-    if (particlesRef.current) {
-      particlesRef.current.rotation.y = state.clock.elapsedTime * 0.05;
-      particlesRef.current.rotation.x = state.clock.elapsedTime * 0.02;
-    }
-  });
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-
-  return (
-    <points ref={particlesRef} geometry={geometry}>
-      <pointsMaterial
-        size={0.03}
-        color="#A855F7"
-        transparent
-        opacity={0.6}
-        sizeAttenuation
-      />
-    </points>
-  );
-}
+/**
+ * FloatingCrystal — CSS-only animated crystal shape
+ * Replaces Three.js version to avoid React reconciler crash
+ * (Cannot read properties of undefined 'S' error)
+ * 
+ * Uses CSS transforms, gradients, and keyframe animations for
+ * a premium 3D-looking floating effect without WebGL.
+ */
 
 export default function FloatingCrystal() {
   return (
-    <div className="absolute inset-0 pointer-events-none">
-      <Canvas
-        camera={{ position: [0, 0, 6], fov: 45 }}
-        gl={{ alpha: true }}
-      >
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[5, 5, 5]} intensity={1} color="#7C3AED" />
-        <directionalLight position={[-5, -5, 5]} intensity={0.5} color="#3B82F6" />
-        <Crystal />
-        <Particles />
-        <Environment preset="night" />
-      </Canvas>
+    <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
+      {/* Main crystal shape */}
+      <div className="relative animate-float">
+        {/* Crystal body */}
+        <div
+          className="w-48 h-48 sm:w-64 sm:h-64 lg:w-80 lg:h-80 opacity-20 dark:opacity-30"
+          style={{
+            background: "linear-gradient(135deg, #7C3AED 0%, #3B82F6 50%, #A855F7 100%)",
+            clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
+            animation: "spin 20s linear infinite, float 6s ease-in-out infinite",
+            filter: "blur(1px)",
+          }}
+        />
+
+        {/* Inner glow */}
+        <div
+          className="absolute inset-4 sm:inset-8 opacity-30 dark:opacity-40"
+          style={{
+            background: "linear-gradient(135deg, #A855F7 0%, #6366F1 100%)",
+            clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
+            animation: "spin 15s linear infinite reverse, float 6s ease-in-out infinite 1s",
+          }}
+        />
+
+        {/* Orbit ring */}
+        <div
+          className="absolute inset-[-20%] border border-secondary/20 dark:border-secondary/30 rounded-full"
+          style={{ animation: "spin 25s linear infinite" }}
+        />
+
+        {/* Second orbit */}
+        <div
+          className="absolute inset-[-10%] border border-accent-blue/15 dark:border-accent-blue/25 rounded-full"
+          style={{
+            animation: "spin 18s linear infinite reverse",
+            transform: "rotateX(60deg)",
+          }}
+        />
+      </div>
+
+      {/* Particle dots */}
+      <div className="absolute inset-0">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 rounded-full bg-secondary/30 dark:bg-secondary/50"
+            style={{
+              left: `${15 + Math.random() * 70}%`,
+              top: `${15 + Math.random() * 70}%`,
+              animation: `float ${3 + Math.random() * 4}s ease-in-out infinite ${Math.random() * 3}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
