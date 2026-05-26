@@ -1,9 +1,13 @@
+"use client";
+
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Search, Bell, Play, ChevronDown } from "lucide-react";
 
 const Sidebar = dynamic(() => import("@/components/dashboard/Sidebar"), { ssr: false });
 const LockedSection = dynamic(() => import("@/components/dashboard/LockedSection"), { ssr: false });
+const DemoAnimation = dynamic(() => import("@/components/animations/DemoAnimation"), { ssr: false });
 const ThemeToggle = dynamic(() => import("@/components/theme/ThemeToggle"), { ssr: false });
 const ThemeProvider = dynamic(() => import("@/components/theme/ThemeContext").then(m => ({ default: m.ThemeProvider })), { ssr: false });
 
@@ -25,8 +29,13 @@ const progressBars = [
 ];
 
 export default function LandingPage() {
+  const [showDemo, setShowDemo] = useState(false);
+
   return (
     <ThemeProvider>
+      {/* Demo animation modal */}
+      {showDemo && <DemoAnimation onClose={() => setShowDemo(false)} />}
+
       <div className="min-h-screen flex bg-background-light dark:bg-background-dark transition-colors duration-500">
         {/* Sidebar */}
         <Sidebar />
@@ -78,7 +87,7 @@ export default function LandingPage() {
                   <Link href="/login" className="btn-primary text-sm px-6 py-2.5">
                     Start Learning
                   </Link>
-                  <button className="flex items-center gap-2 text-brand-frost/70 text-sm hover:text-brand-aqua transition-colors">
+                  <button onClick={() => setShowDemo(true)} className="flex items-center gap-2 text-brand-frost/70 text-sm hover:text-brand-aqua transition-colors">
                     <Play className="w-4 h-4" fill="currentColor" />
                     Watch demo
                   </button>
