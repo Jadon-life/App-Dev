@@ -10,74 +10,95 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // CrysLearn — Blue/Purple Luxury (adaptive contrast)
-        primary: {
-          DEFAULT: "#1a1145", // Deep indigo for headings (light mode)
-          light: "#312E81",
-        },
-        secondary: {
-          DEFAULT: "#7C3AED", // Vibrant purple accent
-          light: "#8B5CF6",
-        },
-        accent: {
-          blue: "#3B82F6",
-          purple: "#A855F7",
-          indigo: "#6366F1",
+        // CrysLearn — Navy/Teal/Cyan + Purple creative blend
+        brand: {
+          navy: "#03045e",
+          french: "#023e8a",
+          teal: "#0077b6",
+          ocean: "#0096c7",
+          surf: "#00b4d8",
+          aqua: "#48cae4",
+          frost: "#90e0ef",
+          ice: "#ade8f4",
+          cyan: "#caf0f8",
+          purple: "#6C3AE0",
+          violet: "#8B5CF6",
+          lavender: "#C4B5FD",
         },
         background: {
-          light: "#F6F5FF",  // Crisp lavender-white
-          dark: "#09061A",   // Deep midnight
-        },
-        text: {
-          light: "#1a1145",  // High-contrast dark indigo
-          dark: "#EDE9FF",   // High-contrast light lavender
+          light: "#F0FAFF",
+          dark: "#020420",
         },
         surface: {
           light: "#FFFFFF",
-          dark: "#110D24",
+          dark: "#0A0E2A",
+          "dark-elevated": "#111640",
+        },
+        text: {
+          primary: "#03045e",
+          secondary: "#023e8a",
+          muted: "#4B6A88",
+          "dark-primary": "#E8F8FF",
+          "dark-secondary": "#90e0ef",
+          "dark-muted": "#6B8FA8",
         },
         success: "#10B981",
         warning: "#F59E0B",
         danger: "#EF4444",
-        correct: "#06B6D4",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "monospace"],
+        heading: ['"Roboto Condensed"', "system-ui", "sans-serif"],
+        body: ["Roboto", "system-ui", "sans-serif"],
+        mono: ['"JetBrains Mono"', "monospace"],
       },
       borderRadius: {
         card: "16px",
         btn: "12px",
         pill: "9999px",
+        section: "20px",
       },
       boxShadow: {
-        subtle: "0 1px 4px rgba(0,0,0,0.06)",
-        glow: "0 0 20px rgba(124, 58, 237, 0.2)",
-        "glow-lg": "0 0 40px rgba(124, 58, 237, 0.3)",
-        card: "0 4px 24px rgba(30, 27, 75, 0.06)",
-        elevated: "0 8px 32px rgba(30, 27, 75, 0.1)",
+        glow: "0 0 20px rgba(0, 180, 216, 0.2)",
+        "glow-lg": "0 0 40px rgba(0, 180, 216, 0.3)",
+        "glow-purple": "0 0 25px rgba(108, 58, 224, 0.25)",
+        card: "0 4px 24px rgba(3, 4, 94, 0.06)",
+        "card-dark": "0 4px 24px rgba(0, 0, 0, 0.4)",
+        elevated: "0 8px 40px rgba(3, 4, 94, 0.1)",
+        lock: "0 0 30px rgba(0, 180, 216, 0.4), 0 0 60px rgba(108, 58, 224, 0.2)",
       },
       backgroundImage: {
-        "gradient-primary": "linear-gradient(135deg, #1a1145 0%, #312E81 100%)",
-        "gradient-accent": "linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%)",
-        "gradient-hero": "linear-gradient(135deg, #1a1145 0%, #312E81 50%, #4C1D95 100%)",
-        "gradient-subtle": "linear-gradient(135deg, #F6F5FF 0%, #EDE9FE 100%)",
+        "gradient-brand": "linear-gradient(135deg, #03045e 0%, #0077b6 50%, #00b4d8 100%)",
+        "gradient-cta": "linear-gradient(135deg, #0077b6 0%, #00b4d8 40%, #48cae4 100%)",
+        "gradient-purple": "linear-gradient(135deg, #6C3AE0 0%, #0077b6 100%)",
+        "gradient-hero": "linear-gradient(135deg, #020420 0%, #03045e 40%, #023e8a 100%)",
+        "gradient-surface": "linear-gradient(180deg, #0A0E2A 0%, #020420 100%)",
       },
       minHeight: {
         touch: "44px",
       },
       animation: {
-        shimmer: "shimmer 2s infinite linear",
         float: "float 6s ease-in-out infinite",
+        "pulse-glow": "pulseGlow 2s ease-in-out infinite",
+        "lock-shake": "lockShake 0.5s ease-in-out",
+        shimmer: "shimmer 2s infinite linear",
       },
       keyframes: {
-        shimmer: {
-          "0%": { backgroundPosition: "-200% 0" },
-          "100%": { backgroundPosition: "200% 0" },
-        },
         float: {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%": { transform: "translateY(-10px)" },
+        },
+        pulseGlow: {
+          "0%, 100%": { boxShadow: "0 0 20px rgba(0, 180, 216, 0.2)" },
+          "50%": { boxShadow: "0 0 40px rgba(0, 180, 216, 0.5), 0 0 60px rgba(108, 58, 224, 0.3)" },
+        },
+        lockShake: {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "25%": { transform: "rotate(-5deg)" },
+          "75%": { transform: "rotate(5deg)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
         },
       },
     },

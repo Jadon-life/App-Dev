@@ -1,203 +1,234 @@
-import Link from "next/link";
-import { BookOpen, Clock, Brain, BarChart3, Wifi, Shield } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import { Search, Bell, Play, ChevronDown } from "lucide-react";
 
-// Dynamic imports — client-only components (Three.js/GSAP need browser APIs)
-const ReactiveBackground = dynamic(() => import("@/components/three/ReactiveBackground"), { ssr: false });
-const FloatingCrystal = dynamic(() => import("@/components/three/FloatingCrystal"), { ssr: false });
-const GlassCarousel = dynamic(() => import("@/components/hero/GlassCarousel"), { ssr: false });
-const ScrollEngine = dynamic(() => import("@/components/animations/ScrollEngine"), { ssr: false });
-const TiltCard = dynamic(() => import("@/components/animations/TiltCard"), { ssr: false });
-const MagneticButton = dynamic(() => import("@/components/animations/MagneticButton"), { ssr: false });
+const Sidebar = dynamic(() => import("@/components/dashboard/Sidebar"), { ssr: false });
+const LockedSection = dynamic(() => import("@/components/dashboard/LockedSection"), { ssr: false });
 const ThemeToggle = dynamic(() => import("@/components/theme/ThemeToggle"), { ssr: false });
 const ThemeProvider = dynamic(() => import("@/components/theme/ThemeContext").then(m => ({ default: m.ThemeProvider })), { ssr: false });
 
-// Only showing JAMB and WAEC for now (NECO and Post-UTME kept in codebase but hidden)
-const visibleExams = [
-  { name: "JAMB (UTME)", slug: "jamb", description: "Unified Tertiary Matriculation Examination", price: "3,500" },
-  { name: "WAEC", slug: "waec", description: "West African Senior School Certificate Examination", price: "3,500" },
+const courses = [
+  { name: "Mathematics", hours: 38, progress: 72, status: "In progress", color: "from-brand-teal to-brand-aqua" },
+  { name: "English Language", hours: 24, progress: 55, status: "In progress", color: "from-brand-purple to-brand-violet" },
+  { name: "Physics", hours: 42, progress: 85, status: "In progress", color: "from-brand-ocean to-brand-surf" },
+  { name: "Chemistry", hours: 19, progress: 30, status: "In progress", color: "from-brand-french to-brand-teal" },
 ];
 
-const features = [
-  { icon: BookOpen, title: "10+ Years Past Questions", description: "Complete question banks filtered by subject and year." },
-  { icon: Clock, title: "Timed Mock Exams", description: "Full simulations with automatic scoring and breakdown." },
-  { icon: Brain, title: "AI-Powered Explanations", description: "Step-by-step solutions so you understand the why." },
-  { icon: BarChart3, title: "Performance Tracking", description: "Track improvement over time, subject by subject." },
-  { icon: Wifi, title: "Offline Mode", description: "Download question packs for study without internet." },
-  { icon: Shield, title: "Parent Dashboard", description: "Parents track scores, study time, and weak areas." },
+const progressBars = [
+  { day: "Mon", height: "60%" },
+  { day: "Tue", height: "80%" },
+  { day: "Wed", height: "45%" },
+  { day: "Thu", height: "90%" },
+  { day: "Fri", height: "70%" },
+  { day: "Sat", height: "35%" },
+  { day: "Sun", height: "55%" },
 ];
 
 export default function LandingPage() {
   return (
     <ThemeProvider>
-      {/* Reactive WebGL background */}
-      <ReactiveBackground />
+      <div className="min-h-screen flex bg-background-light dark:bg-background-dark transition-colors duration-500">
+        {/* Sidebar */}
+        <Sidebar />
 
-      <ScrollEngine>
-        <div className="relative min-h-screen">
-          {/* ═══ NAVIGATION ═══ */}
-          <nav className="fixed top-0 left-0 right-0 z-50 border-b border-indigo-200/20 dark:border-white/[0.06] bg-white/70 dark:bg-[#0c0820]/70 backdrop-blur-2xl">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-              {/* Logo wordmark — gradient + glow, no icon box */}
-              <Link href="/" className="flex items-center">
-                <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 via-purple-500 to-blue-500 dark:from-indigo-300 dark:via-purple-300 dark:to-blue-400 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(124,58,237,0.3)]">
-                  CrysLearn
-                </span>
-              </Link>
-              <div className="flex items-center gap-4">
-                <ThemeToggle />
-                <Link href="/login" className="text-sm text-indigo-900/70 dark:text-indigo-200/70 hover:text-purple-600 dark:hover:text-purple-300 transition-colors hidden sm:block">
-                  Log in
-                </Link>
-                <MagneticButton>
-                  <Link href="/login" className="btn-primary text-sm">
-                    Start Preparing
-                  </Link>
-                </MagneticButton>
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto">
+          {/* Top bar */}
+          <header className="sticky top-0 z-40 flex items-center justify-between px-6 py-4 border-b border-brand-teal/10 dark:border-brand-frost/[0.06] bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-xl">
+            <h1 className="font-heading font-bold text-xl text-text-primary dark:text-text-dark-primary">
+              My Classes
+            </h1>
+            <div className="flex items-center gap-4">
+              {/* Search */}
+              <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-btn border border-brand-teal/15 dark:border-brand-frost/10 bg-surface-light dark:bg-surface-dark">
+                <Search className="w-4 h-4 text-text-muted dark:text-text-dark-muted" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="bg-transparent text-sm outline-none w-32 text-text-primary dark:text-text-dark-primary placeholder:text-text-muted/50"
+                />
               </div>
+              <Bell className="w-5 h-5 text-text-muted dark:text-text-dark-muted cursor-pointer hover:text-brand-surf transition-colors" />
+              <ThemeToggle />
+              {/* Avatar placeholder */}
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-teal to-brand-purple" />
             </div>
-          </nav>
+          </header>
 
-          {/* ═══ HERO SECTION — 3D Crystal + Glass Carousel ═══ */}
-          <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
-            {/* 3D Crystal behind hero */}
-            <div className="absolute inset-0">
-              <FloatingCrystal />
-            </div>
+          <div className="p-6 space-y-6">
+            {/* ═══ HERO BANNER — Cinematic copy ═══ */}
+            <section className="dash-card relative overflow-hidden min-h-[220px] flex flex-col justify-end">
+              {/* Background gradient */}
+              <div className="absolute inset-0 bg-gradient-hero rounded-section" />
+              {/* Animated orbs */}
+              <div className="absolute top-6 right-10 w-32 h-32 bg-brand-surf/10 rounded-full blur-[60px] animate-float" />
+              <div className="absolute bottom-4 right-1/4 w-24 h-24 bg-brand-purple/15 rounded-full blur-[50px] animate-float" style={{ animationDelay: "2s" }} />
 
-            <div className="relative z-10 max-w-5xl mx-auto px-4 w-full">
-              {/* Headline */}
-              <div data-scroll="fade-up" className="text-center mb-12">
-                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-indigo-950 dark:text-white">
-                  Learn with Clarity.
-                  <br />
-                  <span className="bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500 dark:from-purple-400 dark:via-indigo-300 dark:to-blue-400 bg-clip-text text-transparent">
-                    Score with Confidence.
-                  </span>
-                </h1>
-                <p className="mt-5 text-base sm:text-lg text-indigo-900/60 dark:text-indigo-200/60 max-w-xl mx-auto leading-relaxed">
-                  Where exam success becomes crystal clear. Prepare for JAMB and WAEC with timed mock exams, AI explanations, and performance tracking.
+              <div className="relative z-10 p-6">
+                <span className="inline-block px-3 py-1 rounded-pill text-xs font-bold bg-brand-surf/20 text-brand-aqua border border-brand-surf/30 mb-4">
+                  JAMB (UTME)
+                </span>
+                <h2 className="font-heading text-3xl sm:text-4xl font-black text-white leading-tight max-w-md">
+                  Clarity is the new advantage.
+                </h2>
+                <p className="text-brand-frost/60 mt-2 text-sm max-w-sm">
+                  Master JAMB and WAEC with cinematic precision. One mock at a time.
                 </p>
-                <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                  <MagneticButton>
-                    <Link href="/login" className="btn-primary text-base px-8 py-3.5">
-                      Start Preparing
-                    </Link>
-                  </MagneticButton>
-                  <MagneticButton>
-                    <a href="#features" className="btn-secondary text-base px-8 py-3.5">
-                      Explore Features
-                    </a>
-                  </MagneticButton>
+                <div className="flex items-center gap-4 mt-5">
+                  <Link href="/login" className="btn-primary text-sm px-6 py-2.5">
+                    Start Learning
+                  </Link>
+                  <button className="flex items-center gap-2 text-brand-frost/70 text-sm hover:text-brand-aqua transition-colors">
+                    <Play className="w-4 h-4" fill="currentColor" />
+                    Watch demo
+                  </button>
                 </div>
               </div>
+            </section>
 
-              {/* Glassmorphism Carousel */}
-              <div data-scroll="fade-up">
-                <GlassCarousel />
-              </div>
-            </div>
-          </section>
-
-          {/* ═══ SUPPORTED EXAMS ═══ */}
-          <section className="relative py-24 overflow-hidden">
-            <div data-parallax-speed="0.2" className="absolute inset-0 opacity-[0.06] dark:opacity-[0.08]">
-              <div className="absolute top-10 right-10 w-64 h-64 border border-purple-500 rounded-full" />
-              <div className="absolute bottom-10 left-10 w-48 h-48 border border-blue-500 rounded-full" />
-            </div>
-
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-              <div data-scroll="fade-up" className="text-center mb-12">
-                <h2 className="text-2xl sm:text-3xl font-bold text-indigo-950 dark:text-white">
-                  Supported Exams
-                </h2>
-                <p className="text-indigo-900/50 dark:text-indigo-200/50 mt-2">All the exams you need, in one place</p>
-              </div>
-              <div data-stagger="true" className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
-                {visibleExams.map((exam) => (
-                  <TiltCard key={exam.slug}>
-                    <div className="relative overflow-hidden rounded-2xl border border-indigo-200/40 dark:border-white/[0.08] bg-white/60 dark:bg-white/[0.04] backdrop-blur-xl p-8 text-center shadow-lg dark:shadow-purple-900/10 hover:border-purple-400/50 dark:hover:border-purple-500/30 hover:shadow-purple-500/10 transition-all duration-500">
-                      <h3 className="font-bold text-2xl text-indigo-950 dark:text-white">{exam.name}</h3>
-                      <p className="text-sm text-indigo-800/50 dark:text-indigo-200/50 mt-2">{exam.description}</p>
-                      <p className="text-3xl font-extrabold mt-4 bg-gradient-to-r from-purple-600 to-blue-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-                        &#8358;{exam.price}
-                      </p>
-                      <p className="text-xs text-indigo-800/40 dark:text-indigo-300/40 mt-1">one-time payment</p>
-                      <MagneticButton>
-                        <Link href="/login" className="btn-primary w-full mt-5 text-sm">
-                          Unlock {exam.name}
-                        </Link>
-                      </MagneticButton>
+            {/* ═══ TWO-COLUMN LAYOUT: Courses + Progress ═══ */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+              {/* Courses you're taking — LEFT (3/5) */}
+              <div className="lg:col-span-3">
+                <LockedSection title="Your Courses">
+                  <div className="dash-card">
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="font-heading font-bold text-base text-text-primary dark:text-text-dark-primary">
+                        Courses you&apos;re taking
+                      </h3>
+                      <button className="flex items-center gap-1 text-xs text-text-muted dark:text-text-dark-muted hover:text-brand-surf transition-colors">
+                        Filter by <ChevronDown className="w-3 h-3" />
+                      </button>
                     </div>
-                  </TiltCard>
-                ))}
-              </div>
-            </div>
-          </section>
 
-          {/* ═══ FEATURES ═══ */}
-          <section id="features" data-pin="true" className="relative min-h-screen flex items-center py-28">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-              <div data-pin-animate="fade-scale" className="text-center mb-14">
-                <h2 className="text-2xl sm:text-3xl font-bold text-indigo-950 dark:text-white">
-                  Everything You Need to Score High
-                </h2>
-                <p className="text-indigo-900/50 dark:text-indigo-200/50 mt-2">Powerful tools designed for Nigerian students</p>
-              </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {features.map((feature) => (
-                  <div key={feature.title} data-pin-animate="slide-up">
-                    <TiltCard>
-                      <div className="rounded-2xl border border-indigo-200/30 dark:border-white/[0.06] bg-white/70 dark:bg-white/[0.03] backdrop-blur-xl p-6 h-full group hover:border-purple-400/40 dark:hover:border-purple-500/20 hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-500">
-                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 dark:from-purple-500/20 dark:to-blue-500/20 flex items-center justify-center mb-4 group-hover:shadow-[0_0_16px_rgba(124,58,237,0.2)] transition-shadow duration-500">
-                          <feature.icon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    <div className="space-y-3">
+                      {courses.map((course) => (
+                        <div
+                          key={course.name}
+                          className="flex items-center gap-4 p-3 rounded-card border border-brand-teal/[0.06] dark:border-brand-frost/[0.04] hover:border-brand-surf/20 transition-all duration-300"
+                        >
+                          {/* Icon */}
+                          <div className={`w-10 h-10 rounded-btn bg-gradient-to-br ${course.color} flex items-center justify-center flex-shrink-0`}>
+                            <span className="text-white font-bold text-xs">{course.name.charAt(0)}</span>
+                          </div>
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-body font-medium text-sm text-text-primary dark:text-text-dark-primary truncate">
+                              {course.name}
+                            </p>
+                            <p className="text-xs text-text-muted dark:text-text-dark-muted mt-0.5">
+                              {course.hours} hours spent &middot; {course.progress}%
+                            </p>
+                            {/* Progress bar */}
+                            <div className="progress-bar mt-2">
+                              <div className="progress-bar-fill" style={{ width: `${course.progress}%` }} />
+                            </div>
+                          </div>
+                          {/* Status */}
+                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-pill bg-brand-surf/10 text-brand-surf border border-brand-surf/20 whitespace-nowrap">
+                            {course.status}
+                          </span>
                         </div>
-                        <h3 className="font-semibold text-base text-indigo-950 dark:text-white">{feature.title}</h3>
-                        <p className="text-indigo-800/50 dark:text-indigo-200/50 mt-2 text-sm leading-relaxed">{feature.description}</p>
-                      </div>
-                    </TiltCard>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                </LockedSection>
+              </div>
+
+              {/* My Progress — RIGHT (2/5) */}
+              <div className="lg:col-span-2 space-y-5">
+                {/* Study time chart */}
+                <LockedSection title="Study Analytics">
+                  <div className="dash-card">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-heading font-bold text-sm text-text-primary dark:text-text-dark-primary">
+                        Track your study time
+                      </h3>
+                    </div>
+                    {/* Bar chart */}
+                    <div className="flex items-end gap-2 h-28">
+                      {progressBars.map((bar) => (
+                        <div key={bar.day} className="flex-1 flex flex-col items-center gap-1">
+                          <div className="w-full rounded-t bg-gradient-to-t from-brand-teal to-brand-surf transition-all duration-700" style={{ height: bar.height }} />
+                          <span className="text-[9px] text-text-muted dark:text-text-dark-muted">{bar.day}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-3 text-center">
+                      <span className="text-3xl font-heading font-black text-text-primary dark:text-text-dark-primary">124</span>
+                      <span className="text-xs text-text-muted dark:text-text-dark-muted ml-1">Hours</span>
+                    </div>
+                  </div>
+                </LockedSection>
+
+                {/* Courses completed */}
+                <LockedSection title="Achievements">
+                  <div className="dash-card flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-text-muted dark:text-text-dark-muted">Courses completed</p>
+                      <p className="text-4xl font-heading font-black text-text-primary dark:text-text-dark-primary mt-1">36</p>
+                      <p className="text-[10px] text-brand-surf mt-1">76% completion rate</p>
+                    </div>
+                    <div className="w-16 h-16 rounded-full border-4 border-brand-surf/30 flex items-center justify-center">
+                      <span className="text-sm font-bold text-brand-surf">76%</span>
+                    </div>
+                  </div>
+                </LockedSection>
+
+                {/* Performance graph */}
+                <LockedSection title="Performance">
+                  <div className="dash-card">
+                    <h3 className="font-heading font-bold text-sm text-text-primary dark:text-text-dark-primary mb-3">
+                      Performance
+                    </h3>
+                    {/* Fake SVG wave line */}
+                    <svg viewBox="0 0 200 50" className="w-full h-12 overflow-visible">
+                      <path
+                        d="M0,40 C20,35 40,10 60,20 C80,30 100,5 120,15 C140,25 160,8 180,12 L200,10"
+                        fill="none"
+                        stroke="url(#perfGradient)"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <defs>
+                        <linearGradient id="perfGradient" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#6C3AE0" />
+                          <stop offset="50%" stopColor="#00b4d8" />
+                          <stop offset="100%" stopColor="#48cae4" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                </LockedSection>
               </div>
             </div>
-          </section>
 
-          {/* ═══ CTA SECTION ═══ */}
-          <section data-scroll="scale-in" className="relative py-24 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 dark:from-[#0c0820] dark:via-purple-950 dark:to-indigo-950" />
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-10 left-10 w-2 h-2 bg-white rounded-full animate-float" />
-              <div className="absolute top-32 right-20 w-1.5 h-1.5 bg-purple-300 rounded-full animate-float" style={{ animationDelay: "1s" }} />
-              <div className="absolute bottom-20 left-1/3 w-1 h-1 bg-blue-300 rounded-full animate-float" style={{ animationDelay: "2s" }} />
-            </div>
-            <div className="max-w-3xl mx-auto px-4 text-center relative z-10">
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">
+            {/* ═══ CTA SECTION ═══ */}
+            <section className="dash-card text-center py-10 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-brand opacity-[0.03] rounded-section" />
+              <h2 className="font-heading font-black text-2xl text-text-primary dark:text-text-dark-primary relative z-10">
                 Ready to ace your exams?
               </h2>
-              <p className="text-indigo-200/60 mb-10 text-lg">
+              <p className="text-text-muted dark:text-text-dark-muted text-sm mt-2 relative z-10">
                 Join thousands of students preparing smarter with CrysLearn.
               </p>
-              <MagneticButton>
-                <Link href="/login" className="inline-flex items-center gap-2 bg-white text-indigo-900 font-bold px-10 py-4 rounded-xl hover:shadow-[0_0_30px_rgba(124,58,237,0.3)] transition-all duration-300 text-lg">
-                  Get Started Free
-                </Link>
-              </MagneticButton>
-            </div>
-          </section>
+              <Link href="/login" className="btn-primary mt-5 relative z-10">
+                Get Started Free
+              </Link>
+            </section>
 
-          {/* ═══ FOOTER ═══ */}
-          <footer className="border-t border-indigo-200/20 dark:border-white/[0.05] bg-white/50 dark:bg-[#0c0820]/50 backdrop-blur-sm py-10">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-              <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 via-purple-500 to-blue-500 dark:from-indigo-300 dark:via-purple-300 dark:to-blue-400 bg-clip-text text-transparent">
+            {/* Footer */}
+            <footer className="text-center py-6">
+              <span className="font-heading font-bold text-lg bg-gradient-to-r from-brand-teal via-brand-purple to-brand-surf bg-clip-text text-transparent">
                 CrysLearn
               </span>
-              <p className="text-sm text-indigo-800/40 dark:text-indigo-300/40 mt-2">
+              <p className="text-xs text-text-muted dark:text-text-dark-muted mt-1">
                 &copy; 2026 CrysLearn. Where exam success becomes crystal clear.
               </p>
-            </div>
-          </footer>
-        </div>
-      </ScrollEngine>
+            </footer>
+          </div>
+        </main>
+      </div>
     </ThemeProvider>
   );
 }

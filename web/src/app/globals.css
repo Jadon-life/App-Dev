@@ -2,23 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&family=Roboto:wght@400;500;700;900&family=JetBrains+Mono:wght@400&display=swap');
 
 @layer base {
-  /* ─── LIGHT THEME: Crisp indigo/lavender, premium feel ─── */
   :root {
-    --background: #F6F5FF;
-    --foreground: #1a1145;
+    --brand-navy: #03045e;
+    --brand-french: #023e8a;
+    --brand-teal: #0077b6;
+    --brand-ocean: #0096c7;
+    --brand-surf: #00b4d8;
+    --brand-aqua: #48cae4;
+    --brand-frost: #90e0ef;
+    --brand-ice: #ade8f4;
+    --brand-cyan: #caf0f8;
+    --brand-purple: #6C3AE0;
+    --brand-violet: #8B5CF6;
+    --background: #F0FAFF;
+    --foreground: #03045e;
     --surface: #FFFFFF;
-    --muted: rgba(30, 27, 75, 0.5);
+    --muted: #4B6A88;
   }
 
-  /* ─── DARK THEME: Deep midnight, connected purples ─── */
   .dark {
-    --background: #09061A;
-    --foreground: #EDE9FF;
-    --surface: rgba(255, 255, 255, 0.03);
-    --muted: rgba(224, 218, 255, 0.5);
+    --background: #020420;
+    --foreground: #E8F8FF;
+    --surface: #0A0E2A;
+    --muted: #6B8FA8;
   }
 
   html {
@@ -26,131 +35,179 @@
   }
 
   body {
-    @apply font-sans antialiased;
+    @apply font-body antialiased;
     background: var(--background);
     color: var(--foreground);
     transition: background-color 0.6s ease, color 0.4s ease;
   }
 
-  /* Smooth transitions only on bg and color — not ALL properties */
-  * {
-    transition-property: background-color, border-color, color, box-shadow;
-    transition-duration: 0.4s;
-    transition-timing-function: ease;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
   }
 
-  /* Custom scrollbar */
   ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: rgba(139, 92, 246, 0.25);
+    background: rgba(0, 180, 216, 0.3);
     border-radius: 10px;
   }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.5); }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0, 180, 216, 0.6); }
 }
 
 @layer components {
-  /* ─── PRIMARY BUTTON: gradient with glow ─── */
+  /* ─── CTA BUTTON — Teal/Cyan gradient blend ─── */
   .btn-primary {
-    @apply text-white rounded-xl min-h-touch px-6 py-3 font-semibold
+    @apply text-white rounded-btn min-h-touch px-6 py-3 font-bold
            hover:scale-[1.02] active:scale-[0.98]
-           transition-all duration-200 inline-flex items-center justify-center;
-    background: linear-gradient(135deg, #7C3AED 0%, #4F46E5 50%, #3B82F6 100%);
-    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.25);
+           transition-all duration-300 inline-flex items-center justify-center;
+    background: linear-gradient(135deg, #0077b6 0%, #00b4d8 40%, #48cae4 100%);
+    box-shadow: 0 4px 20px rgba(0, 119, 182, 0.3);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transform: skewX(-25deg);
+    transition: left 0.6s ease;
+  }
+  .btn-primary:hover::before {
+    left: 150%;
   }
   .btn-primary:hover {
-    box-shadow: 0 8px 32px rgba(124, 58, 237, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 180, 216, 0.5);
+    transform: translateY(-2px) scale(1.02);
   }
 
-  /* ─── SECONDARY BUTTON ─── */
   .btn-secondary {
-    @apply rounded-xl min-h-touch px-6 py-3 font-semibold
-           hover:scale-[1.02] active:scale-[0.98]
-           transition-all duration-200 inline-flex items-center justify-center;
-    border: 1px solid rgba(139, 92, 246, 0.25);
-    color: #7C3AED;
-    background: rgba(139, 92, 246, 0.05);
-  }
-  .dark .btn-secondary {
-    border-color: rgba(167, 139, 250, 0.3);
-    color: #C4B5FD;
-    background: rgba(139, 92, 246, 0.08);
+    @apply rounded-btn min-h-touch px-6 py-3 font-bold
+           transition-all duration-300 inline-flex items-center justify-center;
+    border: 1px solid rgba(0, 180, 216, 0.3);
+    color: var(--brand-surf);
+    background: rgba(0, 180, 216, 0.05);
   }
   .btn-secondary:hover {
-    border-color: rgba(139, 92, 246, 0.5);
-    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(0, 180, 216, 0.6);
+    background: rgba(0, 180, 216, 0.1);
+    box-shadow: 0 0 20px rgba(0, 180, 216, 0.15);
   }
 
-  /* ─── CARDS ─── */
-  .card {
-    @apply rounded-2xl p-6;
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(99, 102, 241, 0.12);
-    box-shadow: 0 4px 24px rgba(30, 27, 75, 0.06);
-    backdrop-filter: blur(20px);
+  /* ─── DASHBOARD CARDS ─── */
+  .dash-card {
+    @apply rounded-section p-5;
+    background: var(--surface);
+    border: 1px solid rgba(0, 119, 182, 0.08);
+    transition: all 0.3s ease;
   }
-  .dark .card {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  .dark .dash-card {
+    background: #0A0E2A;
+    border-color: rgba(144, 224, 239, 0.06);
   }
 
-  .card-gradient {
-    @apply rounded-2xl p-6;
-    background: linear-gradient(135deg, rgba(139,92,246,0.04) 0%, rgba(59,130,246,0.04) 100%);
-    border: 1px solid rgba(99, 102, 241, 0.12);
-    backdrop-filter: blur(20px);
+  /* ─── LOCKED SECTION OVERLAY ─── */
+  .locked-overlay {
+    @apply absolute inset-0 rounded-section flex flex-col items-center justify-center gap-3 opacity-0 transition-all duration-500 z-20;
+    backdrop-filter: blur(0px);
+    background: transparent;
+    pointer-events: none;
   }
-  .dark .card-gradient {
-    background: linear-gradient(135deg, rgba(139,92,246,0.06) 0%, rgba(59,130,246,0.06) 100%);
-    border-color: rgba(255, 255, 255, 0.06);
+  .locked-section:hover .locked-overlay {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+    background: rgba(3, 4, 94, 0.6);
+    pointer-events: auto;
+  }
+  .dark .locked-section:hover .locked-overlay {
+    background: rgba(2, 4, 32, 0.75);
+  }
+  .locked-section:hover .locked-content {
+    filter: brightness(0.4);
+    transform: scale(0.98);
+    transition: all 0.5s ease;
+  }
+  .lock-icon {
+    @apply transition-all duration-500;
+    filter: drop-shadow(0 0 12px rgba(0, 180, 216, 0.6)) drop-shadow(0 0 24px rgba(108, 58, 224, 0.4));
+  }
+  .locked-section:hover .lock-icon {
+    animation: lockShake 0.5s ease-in-out;
+  }
+  .locked-glow-border {
+    @apply absolute inset-0 rounded-section opacity-0 transition-opacity duration-500 pointer-events-none;
+    border: 2px solid transparent;
+    background: linear-gradient(135deg, rgba(0,180,216,0.3), rgba(108,58,224,0.3)) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  .locked-section:hover .locked-glow-border {
+    opacity: 1;
   }
 
-  /* ─── INPUTS ─── */
+  /* ─── SIDEBAR NAV ─── */
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-btn text-sm font-medium transition-all duration-200;
+    color: var(--muted);
+  }
+  .sidebar-item:hover {
+    color: var(--brand-surf);
+    background: rgba(0, 180, 216, 0.06);
+  }
+  .sidebar-item.active {
+    color: var(--brand-surf);
+    background: rgba(0, 180, 216, 0.1);
+    border-left: 3px solid var(--brand-surf);
+  }
+
+  /* ─── INPUT FIELDS ─── */
   .input-field {
-    @apply w-full rounded-xl px-4 py-3 text-sm
-           focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500
-           transition-all duration-200 placeholder:text-indigo-400/40;
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    background: rgba(255, 255, 255, 0.8);
-    color: #1a1145;
+    @apply w-full rounded-btn px-4 py-3 text-sm font-body
+           focus:outline-none focus:ring-2 focus:ring-brand-surf/30 focus:border-brand-surf
+           transition-all duration-200;
+    border: 1px solid rgba(0, 119, 182, 0.15);
+    background: var(--surface);
+    color: var(--foreground);
   }
   .dark .input-field {
-    border-color: rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
-    color: #EDE9FF;
-    placeholder-color: rgba(199, 190, 255, 0.4);
+    border-color: rgba(144, 224, 239, 0.1);
+    background: #0A0E2A;
   }
 
-  /* ─── EXAM COMPONENTS ─── */
-  .correct-answer {
-    @apply border-l-4 border-l-emerald-500 rounded-xl p-4;
-    background: rgba(16, 185, 129, 0.06);
+  /* ─── PROGRESS BAR ─── */
+  .progress-bar {
+    @apply h-1.5 rounded-full overflow-hidden;
+    background: rgba(0, 119, 182, 0.1);
   }
-  .wrong-answer {
-    @apply border-l-4 border-l-red-500 rounded-xl p-4;
-    background: rgba(239, 68, 68, 0.06);
+  .progress-bar-fill {
+    @apply h-full rounded-full transition-all duration-700;
+    background: linear-gradient(90deg, #0077b6, #00b4d8, #48cae4);
   }
+
+  /* ─── EXAM TIMER ─── */
   .exam-timer {
     @apply sticky top-0 z-50 backdrop-blur-xl px-4 py-2 text-center font-mono;
     background: rgba(255, 255, 255, 0.85);
-    border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+    border-bottom: 1px solid rgba(0, 119, 182, 0.1);
   }
   .dark .exam-timer {
-    background: rgba(9, 6, 26, 0.85);
-    border-bottom-color: rgba(255, 255, 255, 0.05);
+    background: rgba(2, 4, 32, 0.85);
+    border-bottom-color: rgba(144, 224, 239, 0.06);
   }
   .exam-timer.urgent {
-    @apply text-red-500 animate-pulse;
-    background: rgba(239, 68, 68, 0.05);
+    @apply text-danger animate-pulse;
   }
 
-  /* ─── UTILITY CLASSES ─── */
-  .text-gradient {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #7C3AED, #3B82F6);
+  .correct-answer {
+    @apply border-l-4 border-l-success rounded-btn p-4;
+    background: rgba(16, 185, 129, 0.06);
   }
-  .shadow-glow {
-    box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
+  .wrong-answer {
+    @apply border-l-4 border-l-danger rounded-btn p-4;
+    background: rgba(239, 68, 68, 0.06);
   }
 }
