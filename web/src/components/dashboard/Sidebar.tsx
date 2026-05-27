@@ -8,7 +8,7 @@ const navItems = [
   { icon: Home, label: "Dashboard", href: "/dashboard" },
   { icon: BookOpen, label: "My Exams", href: "/exams" },
   { icon: FileText, label: "Past Questions", href: "/exams/jamb/history" },
-  { icon: Calendar, label: "Study Schedule", href: "/dashboard" },
+  { icon: Calendar, label: "Study Schedule", href: "/schedule" },
   { icon: Bot, label: "Crystal AI", href: "/chat" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ];
