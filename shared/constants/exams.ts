@@ -104,4 +104,5 @@ export const EXAMS: Record<ExamSlug, ExamConfig> = {
   },
 };
 
-export const EXAM_SLUGS: ExamSlug[] = ["jamb", "waec", "neco", "post-utme"];
+// Only showing JAMB and WAEC for now (NECO and Post-UTME hidden temporarily)
+export const EXAM_SLUGS: ExamSlug[] = ["jamb", "waec"];
