@@ -36,18 +36,6 @@ const slides: Slide[] = [
     description: "10+ years of past questions with AI explanations for every single answer.",
     color: "#3B82F6",
   },
-  {
-    exam: "NECO",
-    headline: "Ace NECO Exams",
-    description: "Subject-by-subject tracking. See exactly where you're strong and where to improve.",
-    color: "#6366F1",
-  },
-  {
-    exam: "Post-UTME",
-    headline: "Crush Post-UTME",
-    description: "University-specific screening prep. One payment, lifetime access, offline study.",
-    color: "#A855F7",
-  },
 ];
 
 export default function CinematicHero() {

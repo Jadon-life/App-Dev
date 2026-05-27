@@ -5,8 +5,6 @@ import { Colors, Spacing, FontSize, BorderRadius } from "@/src/constants/theme";
 const examOptions = [
   { slug: "jamb", name: "JAMB", description: "UTME" },
   { slug: "waec", name: "WAEC", description: "SSCE" },
-  { slug: "neco", name: "NECO", description: "SSCE" },
-  { slug: "post-utme", name: "Post-UTME", description: "University Screening" },
 ];
 
 const roles = [

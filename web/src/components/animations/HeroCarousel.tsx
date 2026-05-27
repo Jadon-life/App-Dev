@@ -23,18 +23,6 @@ const slides: CarouselSlide[] = [
     accent: "#3B82F6",
     gradient: "from-blue-900/20 via-purple-900/10 to-transparent",
   },
-  {
-    title: "Ace NECO",
-    subtitle: "Track your progress subject by subject. See exactly where to improve.",
-    accent: "#6366F1",
-    gradient: "from-indigo-900/20 via-blue-900/10 to-transparent",
-  },
-  {
-    title: "Crush Post-UTME",
-    subtitle: "University-specific prep. One payment, lifetime access, offline study.",
-    accent: "#A855F7",
-    gradient: "from-violet-900/20 via-purple-900/10 to-transparent",
-  },
 ];
 
 export default function HeroCarousel() {

@@ -230,15 +230,29 @@ export default function Book3D({ onComplete, isFlipping }: Book3DProps) {
       },
     });
 
+    // Straighten book slightly for opening view
     gsap.to(book.rotation, { y: -0.15, x: 0, duration: 0.6, ease: "power2.out" });
     gsap.to(book.position, { y: 0, duration: 0.4, ease: "power2.out" });
 
-    // Open front cover
+    // Open front cover (swings to the left, rests flat at -170°)
     tl.to(frontCover.rotation, { y: -Math.PI + 0.1, duration: 1.8, ease: "power3.inOut" }, 0.2);
 
-    // Flip pages
+    // Flip pages — each page rotates -180° and stays flat on the left side
+    // The key fix: pages rotate to exactly -PI and their z-position shifts slightly
+    // so they stack on top of each other on the left (like a real open book)
     pages.forEach((page, i) => {
-      tl.to(page.rotation, { y: -Math.PI, duration: 1.3, ease: "power2.inOut" }, 1.2 + i * 0.35);
+      tl.to(
+        page.rotation,
+        { y: -Math.PI, duration: 1.3, ease: "power2.inOut" },
+        1.2 + i * 0.35
+      );
+      // Shift page slightly on z-axis after flip so they don't overlap perfectly
+      // This creates the stacked-pages-on-left effect
+      tl.to(
+        page.position,
+        { z: -(i * 0.012) - 0.02, duration: 0.3, ease: "power1.out" },
+        1.2 + i * 0.35 + 1.0 // Starts moving after the flip is mostly done
+      );
     });
   }, [isFlipping, onComplete]);
 

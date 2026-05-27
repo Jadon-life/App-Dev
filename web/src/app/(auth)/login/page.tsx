@@ -59,17 +59,17 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-background-light flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary rounded-btn flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-brand-teal to-brand-purple rounded-btn flex items-center justify-center shadow-glow">
               <span className="text-white font-bold text-lg">C</span>
             </div>
-            <span className="font-bold text-2xl text-primary">CrysLearn</span>
+            <span className="font-bold text-2xl text-text-primary dark:text-text-dark-primary">CrysLearn</span>
           </Link>
-          <p className="mt-3 text-gray-500 text-sm">
+          <p className="mt-3 text-text-muted dark:text-text-dark-muted text-sm">
             {isSignUp
               ? "Create your account to start preparing"
               : "Welcome back! Log in to continue preparing"}
@@ -77,7 +77,7 @@ function LoginForm() {
         </div>
 
         {/* Form Card */}
-        <div className="card">
+        <div className="dash-card">
           {/* Error / Success Messages */}
           {error && (
             <div className="mb-4 p-3 bg-danger/10 border border-danger/20 rounded-btn text-danger text-sm">
@@ -94,7 +94,7 @@ function LoginForm() {
             {/* Name (sign up only) */}
             {isSignUp && (
               <div>
-                <label className="block text-sm font-medium text-text-light mb-1">
+                <label className="block text-sm font-medium text-text-primary dark:text-text-dark-primary mb-1">
                   Full Name
                 </label>
                 <div className="relative">
@@ -113,7 +113,7 @@ function LoginForm() {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-text-light mb-1">
+              <label className="block text-sm font-medium text-text-primary dark:text-text-dark-primary mb-1">
                 Email Address
               </label>
               <div className="relative">
@@ -131,7 +131,7 @@ function LoginForm() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-text-light mb-1">
+              <label className="block text-sm font-medium text-text-primary dark:text-text-dark-primary mb-1">
                 Password
               </label>
               <div className="relative">
@@ -175,16 +175,16 @@ function LoginForm() {
 
           {/* Divider */}
           <div className="flex items-center my-6">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="px-3 text-sm text-gray-400">or</span>
-            <div className="flex-1 h-px bg-gray-200" />
+            <div className="flex-1 h-px bg-brand-teal/10 dark:bg-brand-frost/10" />
+            <span className="px-3 text-sm text-text-muted dark:text-text-dark-muted">or</span>
+            <div className="flex-1 h-px bg-brand-teal/10 dark:bg-brand-frost/10" />
           </div>
 
           {/* Google OAuth */}
           <button
             onClick={handleGoogleSignIn}
-            className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-btn px-4 py-3 min-h-touch
-                       hover:bg-gray-50 transition-colors text-sm font-medium text-text-light"
+            className="w-full flex items-center justify-center gap-3 border border-brand-teal/20 dark:border-brand-frost/10 rounded-btn px-4 py-3 min-h-touch
+                       hover:bg-brand-surf/5 transition-colors text-sm font-medium text-text-primary dark:text-text-dark-primary"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -208,7 +208,7 @@ function LoginForm() {
           </button>
 
           {/* Toggle sign up / sign in */}
-          <p className="mt-6 text-center text-sm text-gray-500">
+          <p className="mt-6 text-center text-sm text-text-muted dark:text-text-dark-muted">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <button
               onClick={() => {
@@ -216,7 +216,7 @@ function LoginForm() {
                 setError("");
                 setSuccessMessage("");
               }}
-              className="text-secondary font-semibold hover:underline"
+              className="text-brand-surf font-semibold hover:underline"
             >
               {isSignUp ? "Log in" : "Sign up"}
             </button>

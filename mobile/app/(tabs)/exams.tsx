@@ -5,8 +5,6 @@ import { Colors, Spacing, FontSize, BorderRadius } from "@/src/constants/theme";
 const examsList = [
   { slug: "jamb", name: "JAMB", description: "Unified Tertiary Matriculation Examination", price: "₦3,500" },
   { slug: "waec", name: "WAEC", description: "West African Senior School Certificate", price: "₦3,500" },
-  { slug: "neco", name: "NECO", description: "National Examinations Council", price: "₦3,500" },
-  { slug: "post-utme", name: "Post-UTME", description: "University Post-UTME Screening", price: "₦5,000" },
 ];
 
 export default function ExamsScreen() {

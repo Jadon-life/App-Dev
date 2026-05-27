@@ -24,7 +24,7 @@ export default function DashboardLayout({
           {/* Top bar */}
           <header className="sticky top-0 z-40 flex items-center justify-between px-6 py-4 border-b border-brand-teal/10 dark:border-brand-frost/[0.06] bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-xl">
             <h1 className="font-heading font-bold text-xl text-text-primary dark:text-text-dark-primary">
-              My Classes
+              Dashboard
             </h1>
             <div className="flex items-center gap-4">
               <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-btn border border-brand-teal/15 dark:border-brand-frost/10 bg-surface-light dark:bg-surface-dark">
