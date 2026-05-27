@@ -1,23 +1,16 @@
 "use client";
 
 /**
- * Book3D — A full 3D interactive book using raw Three.js.
+ * Book3D — Realistic book-opening experience using raw Three.js.
  * 
- * Architecture:
- * - Uses imperative Three.js inside useEffect (avoids R3F reconciler crash)
- * - Book consists of a cover (front/back) + 8 flippable pages
- * - Each page flips sequentially with GSAP for butter-smooth animation
- * - After all 8 pages flip, fires onComplete callback to transition to site
- * - Book slowly rotates/floats when idle (before click)
- * - On click: stops floating → pages flip one by one → fade out
- * 
- * Performance: 
- * - Low poly planes for pages (no heavy geometry)
- * - Single render loop, cleaned up on unmount
- * - DPR capped at 1.5 for mobile
+ * The book sits facing the user (like a textbook on a desk).
+ * The FRONT COVER has "CrysLearn" embossed on it.
+ * When clicked, the cover opens TOWARD the user (like opening a real book),
+ * then 8 pages flip from right to left one by one.
+ * After all pages flip, the book zooms in and transitions to the website.
  */
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import gsap from "gsap";
 
@@ -29,228 +22,191 @@ interface Book3DProps {
 export default function Book3D({ onComplete, isFlipping }: Book3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<{
-    renderer: THREE.WebGLRenderer;
-    scene: THREE.Scene;
-    camera: THREE.PerspectiveCamera;
     book: THREE.Group;
+    cover: THREE.Mesh;
     pages: THREE.Mesh[];
-    animationId: number;
   } | null>(null);
 
-  // Build the 3D book scene
   useEffect(() => {
     if (!containerRef.current) return;
-
     const container = containerRef.current;
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    // ═══ SCENE ═══
+    // ═══ SCENE SETUP ═══
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
-    camera.position.set(0, 0.5, 4);
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(0, 1.5, 5);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.setClearColor(0x000000, 0);
-    renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
     // ═══ LIGHTING ═══
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-    scene.add(ambientLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const key = new THREE.DirectionalLight(0x48cae4, 1.0);
+    key.position.set(2, 4, 5);
+    scene.add(key);
+    const fill = new THREE.DirectionalLight(0x6C3AE0, 0.4);
+    fill.position.set(-3, 2, 3);
+    scene.add(fill);
+    const rim = new THREE.PointLight(0x00b4d8, 0.6, 10);
+    rim.position.set(0, -1, 4);
+    scene.add(rim);
 
-    const keyLight = new THREE.DirectionalLight(0x48cae4, 1.2);
-    keyLight.position.set(3, 4, 5);
-    keyLight.castShadow = true;
-    scene.add(keyLight);
+    // ═══ BOOK DIMENSIONS ═══
+    const W = 1.6;
+    const H = 2.2;
+    const D = 0.015;
+    const numPages = 8;
 
-    const fillLight = new THREE.DirectionalLight(0x6C3AE0, 0.6);
-    fillLight.position.set(-3, 2, 3);
-    scene.add(fillLight);
-
-    const rimLight = new THREE.DirectionalLight(0x00b4d8, 0.4);
-    rimLight.position.set(0, -2, -3);
-    scene.add(rimLight);
-
-    // ═══ BOOK GROUP ═══
     const book = new THREE.Group();
     scene.add(book);
 
-    const pageWidth = 1.4;
-    const pageHeight = 1.9;
-    const pageDepth = 0.008;
-    const numPages = 8;
+    // ═══ COVER TEXTURE WITH "CrysLearn" ═══
+    const coverCanvas = document.createElement("canvas");
+    coverCanvas.width = 512;
+    coverCanvas.height = 700;
+    const ctx = coverCanvas.getContext("2d")!;
 
-    // Book cover (front)
-    const coverGeo = new THREE.BoxGeometry(pageWidth + 0.06, pageHeight + 0.06, 0.04);
+    const gradient = ctx.createLinearGradient(0, 0, 512, 700);
+    gradient.addColorStop(0, "#03045e");
+    gradient.addColorStop(1, "#023e8a");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 512, 700);
+
+    ctx.strokeStyle = "rgba(72, 202, 228, 0.4)";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(30, 30, 452, 640);
+    ctx.strokeStyle = "rgba(108, 58, 224, 0.3)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(40, 40, 432, 620);
+
+    ctx.fillStyle = "#48cae4";
+    ctx.font = "bold 64px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("CrysLearn", 256, 320);
+
+    ctx.fillStyle = "rgba(144, 224, 239, 0.6)";
+    ctx.font = "20px Arial, sans-serif";
+    ctx.fillText("Learn with clarity.", 256, 380);
+    ctx.fillText("Score with confidence.", 256, 410);
+
+    ctx.strokeStyle = "rgba(72, 202, 228, 0.5)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(180, 440);
+    ctx.lineTo(332, 440);
+    ctx.stroke();
+
+    const coverTexture = new THREE.CanvasTexture(coverCanvas);
+
+    // ═══ FRONT COVER (pivots on left edge like a real book) ═══
+    const coverGeo = new THREE.PlaneGeometry(W, H);
+    coverGeo.translate(W / 2, 0, 0);
     const coverMat = new THREE.MeshStandardMaterial({
-      color: 0x03045e,
-      metalness: 0.3,
+      map: coverTexture,
       roughness: 0.4,
+      metalness: 0.2,
     });
-    const frontCover = new THREE.Mesh(coverGeo, coverMat);
-    frontCover.position.set(pageWidth / 2, 0, -numPages * pageDepth - 0.03);
-    book.add(frontCover);
+    const cover = new THREE.Mesh(coverGeo, coverMat);
+    cover.position.set(-W / 2, 0, numPages * D / 2 + 0.01);
+    book.add(cover);
 
-    // Book cover (back)
-    const backCover = new THREE.Mesh(coverGeo, coverMat.clone());
-    backCover.position.set(pageWidth / 2, 0, 0.03);
+    // Back cover
+    const backGeo = new THREE.PlaneGeometry(W, H);
+    const backMat = new THREE.MeshStandardMaterial({ color: 0x03045e, roughness: 0.5, metalness: 0.3 });
+    const backCover = new THREE.Mesh(backGeo, backMat);
+    backCover.position.set(0, 0, -numPages * D / 2 - 0.01);
+    backCover.rotation.y = Math.PI;
     book.add(backCover);
-
-    // Book spine
-    const spineGeo = new THREE.BoxGeometry(0.04, pageHeight + 0.06, numPages * pageDepth + 0.1);
-    const spineMat = new THREE.MeshStandardMaterial({
-      color: 0x023e8a,
-      metalness: 0.4,
-      roughness: 0.3,
-    });
-    const spine = new THREE.Mesh(spineGeo, spineMat);
-    spine.position.set(-0.02, 0, -numPages * pageDepth / 2);
-    book.add(spine);
 
     // ═══ PAGES ═══
     const pages: THREE.Mesh[] = [];
-    const pageGeo = new THREE.BoxGeometry(pageWidth, pageHeight, pageDepth);
-
-    // Page colors — gradient from teal to purple across pages
-    const pageColors = [
-      0xffffff, 0xf8fdff, 0xf0faff, 0xe8f8ff,
-      0xe0f5ff, 0xd8f0ff, 0xd0ecff, 0xc8e8ff,
-    ];
-
     for (let i = 0; i < numPages; i++) {
+      const pageGeo = new THREE.PlaneGeometry(W, H);
+      pageGeo.translate(W / 2, 0, 0);
       const pageMat = new THREE.MeshStandardMaterial({
-        color: pageColors[i],
-        roughness: 0.8,
-        metalness: 0.0,
+        color: 0xfafcff,
+        roughness: 0.9,
+        metalness: 0,
         side: THREE.DoubleSide,
       });
-
       const page = new THREE.Mesh(pageGeo, pageMat);
-      // Position each page stacked — pivot point is the left edge (spine)
-      page.geometry.translate(pageWidth / 2, 0, 0);
-      page.position.set(0, 0, -i * pageDepth - 0.02);
-      page.userData = { index: i, flipped: false };
-
+      page.position.set(-W / 2, 0, (numPages / 2 - i) * D);
       book.add(page);
       pages.push(page);
     }
 
-    // Center the book
-    book.position.set(-pageWidth / 2, 0, 0);
-    book.rotation.y = -0.2;
+    book.rotation.x = -0.15;
 
-    // ═══ IDLE FLOATING ANIMATION ═══
+    // ═══ RENDER LOOP ═══
     const clock = new THREE.Clock();
-    let animationId: number = 0;
-
+    let animId = 0;
     const animate = () => {
-      animationId = requestAnimationFrame(animate);
-      const elapsed = clock.getElapsedTime();
-
-      // Gentle float + rotation when idle
+      animId = requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
       if (!isFlipping) {
-        book.rotation.y = -0.2 + Math.sin(elapsed * 0.5) * 0.05;
-        book.position.y = Math.sin(elapsed * 0.8) * 0.05;
+        book.position.y = Math.sin(t * 0.6) * 0.03;
+        book.rotation.y = Math.sin(t * 0.3) * 0.02;
       }
-
       renderer.render(scene, camera);
     };
-
     animate();
 
     // ═══ RESIZE ═══
-    const handleResize = () => {
+    const onResize = () => {
       const w = container.clientWidth;
       const h = container.clientHeight;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
-    window.addEventListener("resize", handleResize);
+    window.addEventListener("resize", onResize);
 
-    // Store refs for flip animation
-    sceneRef.current = { renderer, scene, camera, book, pages, animationId };
+    sceneRef.current = { book, cover, pages };
 
-    // ═══ CLEANUP ═══
     return () => {
-      cancelAnimationFrame(animationId);
-      window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(animId);
+      window.removeEventListener("resize", onResize);
       renderer.dispose();
       coverGeo.dispose();
       coverMat.dispose();
-      spineGeo.dispose();
-      spineMat.dispose();
-      pageGeo.dispose();
-      pages.forEach((p) => (p.material as THREE.Material).dispose());
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
+      backGeo.dispose();
+      backMat.dispose();
+      coverTexture.dispose();
+      pages.forEach((p) => { p.geometry.dispose(); (p.material as THREE.Material).dispose(); });
+      if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ═══ PAGE FLIP ANIMATION (triggered when isFlipping becomes true) ═══
+  // ═══ OPEN ANIMATION ═══
   useEffect(() => {
     if (!isFlipping || !sceneRef.current) return;
+    const { book, cover, pages } = sceneRef.current;
 
-    const { pages, book } = sceneRef.current;
-
-    // Straighten the book first
-    gsap.to(book.rotation, {
-      y: 0,
-      duration: 0.8,
-      ease: "power2.out",
-    });
-    gsap.to(book.position, {
-      y: 0,
-      duration: 0.5,
-      ease: "power2.out",
-    });
-
-    // Flip each page sequentially with beautiful slow motion
-    const timeline = gsap.timeline({
+    const tl = gsap.timeline({
       onComplete: () => {
-        // After all pages flip, wait a moment then trigger transition
-        gsap.to(book.scale, {
-          x: 1.5,
-          y: 1.5,
-          z: 1.5,
-          duration: 1,
-          ease: "power2.in",
-          delay: 0.3,
-        });
-        gsap.to(book.position, {
-          z: 3,
-          duration: 1.2,
-          ease: "power2.in",
-          delay: 0.3,
-          onComplete: onComplete,
-        });
+        gsap.to(book.position, { z: 2, duration: 1, ease: "power2.in", delay: 0.3 });
+        gsap.to(book.scale, { x: 1.8, y: 1.8, z: 1.8, duration: 1, ease: "power2.in", delay: 0.3, onComplete: onComplete });
       },
     });
 
+    gsap.to(book.rotation, { y: 0, x: -0.1, duration: 0.5, ease: "power2.out" });
+    gsap.to(book.position, { y: 0, duration: 0.4, ease: "power2.out" });
+
+    // Open front cover
+    tl.to(cover.rotation, { y: -Math.PI, duration: 1.5, ease: "power3.inOut" }, 0.3);
+
+    // Flip pages one by one
     pages.forEach((page, i) => {
-      timeline.to(
-        page.rotation,
-        {
-          y: -Math.PI,
-          duration: 1.2,
-          ease: "power2.inOut",
-        },
-        i * 0.4 // Stagger: each page starts 0.4s after the previous
-      );
+      tl.to(page.rotation, { y: -Math.PI, duration: 1.2, ease: "power2.inOut" }, 1.0 + i * 0.4);
     });
   }, [isFlipping, onComplete]);
 
-  return (
-    <div
-      ref={containerRef}
-      className="w-full h-full cursor-pointer"
-      style={{ touchAction: "none" }}
-    />
-  );
+  return <div ref={containerRef} className="w-full h-full cursor-pointer" style={{ touchAction: "none" }} />;
 }

@@ -64,15 +64,10 @@ export default function BookLandingPage() {
         ))}
       </div>
 
-      {/* Logo + Tagline — Above the book */}
-      <div className={`text-center mb-8 z-10 transition-all duration-1000 ${isFlipping ? "opacity-0 -translate-y-10" : "opacity-100"}`}>
-        <h1 className="font-heading font-black text-4xl sm:text-5xl lg:text-6xl tracking-tight">
-          <span className="bg-gradient-to-r from-brand-aqua via-brand-surf to-brand-purple bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(0,180,216,0.3)]">
-            CrysLearn
-          </span>
-        </h1>
-        <p className="text-brand-frost/50 text-sm sm:text-base mt-3 font-body">
-          Learn with clarity. Score with confidence.
+      {/* Tagline — Above the book (logo is ON the book cover) */}
+      <div className={`text-center mb-6 z-10 transition-all duration-1000 ${isFlipping ? "opacity-0 -translate-y-10" : "opacity-100"}`}>
+        <p className="text-brand-frost/40 text-xs sm:text-sm font-body tracking-widest uppercase">
+          Open the book to begin your journey
         </p>
       </div>
 
