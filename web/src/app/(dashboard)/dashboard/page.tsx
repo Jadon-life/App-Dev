@@ -3,7 +3,7 @@
 /**
  * Dashboard Page — matches the reference image layout:
  * 1. Hero banner (subject preview + continue course)
- * 2. Courses you're taking (JAMB + WAEC subjects with progress)
+ * 2. Courses you're taking (UTME + WAEC subjects with progress)
  * 3. My Progress (study time chart + courses completed + performance)
  */
 

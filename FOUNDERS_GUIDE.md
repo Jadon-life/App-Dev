@@ -211,7 +211,7 @@ VALUES (
 | Competitor | Weakness | How CrysLearn wins |
 |-----------|----------|-------------------|
 | Prepclass | Expensive subscription (₦5k/month) | One-time payment = no recurring cost |
-| JAMB CBT Practice | Web-only, ugly design, no explanations | Beautiful mobile app + AI explanations |
+| UTME CBT Practice | Web-only, ugly design, no explanations | Beautiful mobile app + AI explanations |
 | Past Questions PDFs | No interactivity, no tracking | Timed mocks + progress tracking |
 | Testmoz | Generic, not Nigerian-focused | 100% built for Nigerian exams |
 | Tutorial centers | Expensive (₦20k-₦100k), location-bound | Accessible anywhere, ₦3,500 only |

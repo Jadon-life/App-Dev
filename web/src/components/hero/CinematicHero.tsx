@@ -25,8 +25,8 @@ interface Slide {
 
 const slides: Slide[] = [
   {
-    exam: "JAMB",
-    headline: "Master JAMB UTME",
+    exam: "UTME",
+    headline: "Master UTME",
     description: "60 questions. 90 minutes. Timed mocks that feel like the real CBT experience.",
     color: "#7C3AED",
   },

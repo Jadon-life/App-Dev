@@ -17,8 +17,8 @@ export interface ExamConfig {
 export const EXAMS: Record<ExamSlug, ExamConfig> = {
   jamb: {
     slug: "jamb",
-    name: "JAMB",
-    fullName: "Joint Admissions and Matriculation Board (UTME)",
+    name: "UTME",
+    fullName: "Unified Tertiary Matriculation Examination (UTME)",
     price_kobo: 350000,
     priceFormatted: "₦3,500",
     subjects: [
@@ -104,5 +104,5 @@ export const EXAMS: Record<ExamSlug, ExamConfig> = {
   },
 };
 
-// Only showing JAMB and WAEC for now (NECO and Post-UTME hidden temporarily)
+// Only showing UTME and WAEC for now (NECO and Post-UTME hidden temporarily)
 export const EXAM_SLUGS: ExamSlug[] = ["jamb", "waec"];

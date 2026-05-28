@@ -67,7 +67,7 @@ function PremiumGate() {
         {/* Feature preview */}
         <div className="mt-6 space-y-3 text-left">
           {[
-            "Ask any JAMB/WAEC question and get step-by-step solutions",
+            "Ask any UTME/WAEC question and get step-by-step solutions",
             "Explain complex topics in simple language",
             "Generate practice questions for any subject",
             "Available 24/7 — study anytime",
@@ -103,7 +103,7 @@ function ChatInterface() {
     {
       id: "welcome",
       role: "ai",
-      content: "Hello! I'm Crystal AI, your personal tutor. Ask me anything about JAMB, WAEC, or any subject — I'll explain it step by step. What would you like to learn today?",
+      content: "Hello! I'm Crystal AI, your personal tutor. Ask me anything about UTME, WAEC, or any subject — I'll explain it step by step. What would you like to learn today?",
       timestamp: new Date(),
     },
   ]);

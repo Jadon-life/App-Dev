@@ -12,7 +12,7 @@ interface CarouselSlide {
 
 const slides: CarouselSlide[] = [
   {
-    title: "Master JAMB",
+    title: "Master UTME",
     subtitle: "60 questions. 90 minutes. Timed mock exams that feel like the real thing.",
     accent: "#7C3AED",
     gradient: "from-purple-900/20 via-indigo-900/10 to-transparent",

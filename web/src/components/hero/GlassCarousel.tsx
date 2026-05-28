@@ -20,7 +20,7 @@ interface CarouselCard {
 
 const cards: CarouselCard[] = [
   {
-    title: "JAMB Mock Exams",
+    title: "UTME Mock Exams",
     description: "60 questions, 90 minutes. Experience the real CBT format with instant scoring.",
     icon: Target,
     gradient: "from-purple-500/20 to-indigo-500/20",

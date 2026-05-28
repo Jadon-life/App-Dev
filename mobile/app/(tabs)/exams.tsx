@@ -3,7 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors, Spacing, FontSize, BorderRadius } from "@/src/constants/theme";
 
 const examsList = [
-  { slug: "jamb", name: "JAMB", description: "Unified Tertiary Matriculation Examination", price: "₦3,500" },
+  { slug: "jamb", name: "UTME", description: "Unified Tertiary Matriculation Examination", price: "₦3,500" },
   { slug: "waec", name: "WAEC", description: "West African Senior School Certificate", price: "₦3,500" },
 ];
 

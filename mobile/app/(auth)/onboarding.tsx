@@ -3,7 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors, Spacing, FontSize, BorderRadius } from "@/src/constants/theme";
 
 const examOptions = [
-  { slug: "jamb", name: "JAMB", description: "UTME" },
+  { slug: "jamb", name: "UTME", description: "UTME" },
   { slug: "waec", name: "WAEC", description: "SSCE" },
 ];
 

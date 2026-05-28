@@ -116,7 +116,7 @@ export default function Book3D({ onComplete, isFlipping }: Book3DProps) {
     ctx.stroke();
     ctx.fillStyle = "rgba(144, 224, 239, 0.4)";
     ctx.font = "14px Arial";
-    ctx.fillText("JAMB \u2022 WAEC \u2022 Excellence", 256, 600);
+    ctx.fillText("UTME \u2022 WAEC \u2022 Excellence", 256, 600);
     const coverTexture = new THREE.CanvasTexture(coverCanvas);
 
     // Front cover (BoxGeometry with thickness, pivots on left)

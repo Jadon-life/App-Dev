@@ -2,7 +2,7 @@
 
 /**
  * Home Page — The main website that appears after the book opens.
- * Contains: hero headline, features, pricing (JAMB + WAEC), CTA, footer.
+ * Contains: hero headline, features, pricing (UTME + WAEC), CTA, footer.
  * This is the SaaS landing page — NOT the dashboard.
  */
 
@@ -14,7 +14,7 @@ const ThemeToggle = dynamic(() => import("@/components/theme/ThemeToggle"), { ss
 const ThemeProvider = dynamic(() => import("@/components/theme/ThemeContext").then(m => ({ default: m.ThemeProvider })), { ssr: false });
 
 const features = [
-  { icon: BookOpen, title: "10+ Years Past Questions", description: "Complete question banks for JAMB and WAEC, filtered by subject and year." },
+  { icon: BookOpen, title: "10+ Years Past Questions", description: "Complete question banks for UTME and WAEC, filtered by subject and year." },
   { icon: Clock, title: "Timed Mock Exams", description: "Full exam simulations with automatic scoring and performance breakdown." },
   { icon: Brain, title: "AI-Powered Explanations", description: "Every question has a crystal-clear, step-by-step solution." },
   { icon: BarChart3, title: "Performance Tracking", description: "Track improvement over time, subject by subject. See your weak areas." },
@@ -23,7 +23,7 @@ const features = [
 ];
 
 const exams = [
-  { name: "JAMB (UTME)", price: "3,500", subjects: "12 subjects", questions: "60 questions per mock" },
+  { name: "UTME", price: "3,500", subjects: "12 subjects", questions: "60 questions per mock" },
   { name: "WAEC (SSCE)", price: "3,500", subjects: "12 subjects", questions: "50 questions per mock" },
 ];
 
@@ -76,7 +76,7 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-6 text-base sm:text-lg text-text-muted dark:text-text-dark-muted max-w-xl mx-auto leading-relaxed">
-              Master JAMB and WAEC with cinematic precision. Timed mocks, AI explanations, and progress tracking — all in one place.
+              Master UTME and WAEC with cinematic precision. Timed mocks, AI explanations, and progress tracking — all in one place.
             </p>
 
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">

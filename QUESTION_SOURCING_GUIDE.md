@@ -9,7 +9,7 @@
 ### 1. ALOC Questions API (RECOMMENDED — FREE)
 - **URL:** https://questions.aloc.com.ng/
 - **GitHub:** https://github.com/Seunope/aloc-endpoints
-- **What it has:** 6,000+ questions for JAMB (UTME), WAEC (WASSCE), NECO, and Post-UTME
+- **What it has:** 6,000+ questions for UTME, WAEC (WASSCE), NECO, and Post-UTME
 - **Format:** JSON API — perfect for importing directly into your database
 - **Subjects:** Mathematics, English, Physics, Chemistry, Biology, Economics, Government, etc.
 - **How to use:**
@@ -21,7 +21,7 @@
 
 ### 2. MySchool.ng Classroom (FREE, Manual)
 - **URL:** https://myschool.ng/classroom
-- **What it has:** Thousands of JAMB and WAEC questions organized by subject
+- **What it has:** Thousands of UTME and WAEC questions organized by subject
 - **Format:** Web pages — you'd need to manually copy or scrape
 - **Subjects:** All major subjects available
 - **Notes:** Great for verifying question accuracy and getting explanations
@@ -201,7 +201,7 @@ Before adding any question, verify:
 - They are available in commercial booklets sold in every bookshop
 - Multiple apps and websites publish them freely (MySchool.ng, ALOC, Passnownow)
 - You are not breaking any law by providing past questions — this is standard practice
-- However, do NOT claim the questions are "official" from JAMB/WAEC directly
+- However, do NOT claim the questions are "official" from UTME/WAEC directly
 - Word it as "practice questions based on past examination patterns"
 
 ---
