@@ -40,7 +40,8 @@ function LoginForm() {
         );
       } else {
         await signInWithEmail(email, password);
-        router.push(redirectTo);
+        // Use window.location for full reload — ensures middleware reads the new session cookie
+        window.location.href = redirectTo;
       }
     } catch (err: any) {
       setError(err.message || "Something went wrong. Please try again.");
