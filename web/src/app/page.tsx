@@ -28,11 +28,14 @@ export default function BookLandingPage() {
   }, [isFlipping]);
 
   const handleFlipComplete = useCallback(() => {
-    // Fade out the entire landing page, then navigate
+    // Fade to black, then navigate (dark transition — no white flash)
     setIsFadingOut(true);
+    // Set body background to black before navigating to prevent white flash
+    document.body.style.backgroundColor = "#020420";
+    document.documentElement.style.backgroundColor = "#020420";
     setTimeout(() => {
       router.push("/home");
-    }, 800); // Wait for fade-out animation
+    }, 1000); // Slightly longer for smoother dark fade
   }, [router]);
 
   return (
