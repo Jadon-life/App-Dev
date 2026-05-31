@@ -55,11 +55,27 @@ function MockExamContent() {
 
       setLoading(true);
 
+      // First, resolve the exam slug to its UUID
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: examRecord, error: examError } = await (supabase as any)
+        .from("exams")
+        .select("id")
+        .eq("slug", examSlug)
+        .single();
+
+      if (examError || !examRecord) {
+        console.error("Failed to find exam:", examError);
+        setLoading(false);
+        return;
+      }
+
+      const examId = examRecord.id;
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let query = (supabase as any)
         .from("questions")
         .select("id, question_text, options, subject, year")
-        .eq("exam_id", examSlug);
+        .eq("exam_id", examId);
 
       if (subjects.length > 0) {
         query = query.in("subject", subjects);
@@ -87,7 +103,7 @@ function MockExamContent() {
           .from("mock_attempts")
           .insert({
             user_id: user.id,
-            exam_id: examSlug,
+            exam_id: examId,
             subjects,
             answers: {},
             score: 0,

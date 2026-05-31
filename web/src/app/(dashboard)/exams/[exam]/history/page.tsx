@@ -31,11 +31,21 @@ export default function HistoryPage() {
   const { data: questions, isLoading } = useQuery({
     queryKey: ["history-questions", examSlug, selectedSubject, selectedYear],
     queryFn: async () => {
+      // First, resolve the exam slug to its UUID
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: examRecord, error: examError } = await (supabase as any)
+        .from("exams")
+        .select("id")
+        .eq("slug", examSlug)
+        .single();
+
+      if (examError || !examRecord) throw examError || new Error("Exam not found");
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let query = (supabase as any)
         .from("questions")
         .select("*")
-        .eq("exam_id", examSlug)
+        .eq("exam_id", examRecord.id)
         .order("year", { ascending: false })
         .order("subject", { ascending: true });
 
