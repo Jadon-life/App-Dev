@@ -91,8 +91,14 @@ function MockExamContent() {
         return;
       }
 
+      // Parse options if stored as JSON string (double-serialized)
+      const parsed = (data || []).map((q: any) => ({
+        ...q,
+        options: typeof q.options === "string" ? JSON.parse(q.options) : q.options,
+      }));
+
       // Shuffle questions
-      const shuffled = (data || []).sort(() => Math.random() - 0.5);
+      const shuffled = parsed.sort(() => Math.random() - 0.5);
       setQuestions(shuffled.slice(0, exam.mockQuestionCount));
       setTimeRemaining(exam.mockDurationMinutes * 60);
 

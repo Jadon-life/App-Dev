@@ -71,6 +71,7 @@ function ResultsContent() {
         const questionsWithAnswers: QuestionWithAnswer[] = (questions || []).map(
           (q: any) => ({
             ...q,
+            options: typeof q.options === "string" ? JSON.parse(q.options) : q.options,
             user_answer: userAnswers[q.id] || null,
             is_correct: userAnswers[q.id] === q.correct_option,
           })

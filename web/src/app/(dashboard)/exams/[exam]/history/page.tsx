@@ -58,7 +58,10 @@ export default function HistoryPage() {
 
       const { data, error } = await query.limit(100);
       if (error) throw error;
-      return data as HistoryQuestion[];
+      return (data || []).map((q: any) => ({
+        ...q,
+        options: typeof q.options === "string" ? JSON.parse(q.options) : q.options,
+      })) as HistoryQuestion[];
     },
   });
 
