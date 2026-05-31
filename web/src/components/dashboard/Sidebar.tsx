@@ -7,7 +7,7 @@ import { Home, BookOpen, FileText, Calendar, Bot, Settings } from "lucide-react"
 const navItems = [
   { icon: Home, label: "Dashboard", href: "/dashboard" },
   { icon: BookOpen, label: "My Exams", href: "/exams" },
-  { icon: FileText, label: "Past Questions", href: "/exams/jamb/history" },
+  { icon: FileText, label: "Past Questions", href: "/past-questions" },
   { icon: Calendar, label: "Study Schedule", href: "/schedule" },
   { icon: Bot, label: "Crystal AI", href: "/chat" },
   { icon: Settings, label: "Settings", href: "/settings" },
@@ -31,7 +31,7 @@ export default function Sidebar() {
       {/* Nav items — all linked to actual routes */}
       <nav className="flex flex-col gap-1 flex-1 w-full px-2">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          const isActive = pathname === item.href || (item.href !== "/dashboard" && item.href !== "/exams" && pathname.startsWith(item.href));
           return (
             <Link
               key={item.label}

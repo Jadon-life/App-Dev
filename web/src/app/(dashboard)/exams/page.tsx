@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { EXAMS, EXAM_SLUGS } from "@shared/constants/exams";
-import { Lock } from "lucide-react";
+import { BookOpen, ArrowRight } from "lucide-react";
 
 export default function ExamsPage() {
   return (
@@ -24,7 +24,7 @@ export default function ExamsPage() {
                 <h2 className="font-heading font-bold text-xl text-text-primary dark:text-text-dark-primary">
                   {exam.name}
                 </h2>
-                <Lock className="w-4 h-4 text-text-muted dark:text-text-dark-muted" />
+                <BookOpen className="w-4 h-4 text-text-muted dark:text-text-dark-muted" />
               </div>
 
               <p className="text-sm text-text-muted dark:text-text-dark-muted mb-4">{exam.fullName}</p>
@@ -36,12 +36,22 @@ export default function ExamsPage() {
                 <span>10+ years of past questions</span>
               </div>
 
-              <Link
-                href={`/pay/${slug}`}
-                className="btn-primary w-full text-sm flex items-center justify-center gap-2"
-              >
-                Unlock for {exam.priceFormatted}
-              </Link>
+              <div className="flex gap-3">
+                <Link
+                  href={`/exams/${slug}/subjects`}
+                  className="btn-primary flex-1 text-sm flex items-center justify-center gap-2"
+                >
+                  Start Mock
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  href={`/exams/${slug}/history`}
+                  className="btn-secondary flex-1 text-sm flex items-center justify-center gap-2"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  Past Questions
+                </Link>
+              </div>
             </div>
           );
         })}
