@@ -263,23 +263,23 @@ function MockExamContent() {
               <button
                 key={option.label}
                 onClick={() => handleAnswer(currentQuestion.id, option.label)}
-                className={`w-full text-left px-4 py-3 rounded-btn border-2 transition-all min-h-touch ${
+                className={`w-full text-left px-4 py-3.5 rounded-btn border-2 transition-all min-h-touch ${
                   isSelected
-                    ? "border-secondary bg-secondary/5 text-secondary"
-                    : "border-gray-200 text-text-light hover:border-gray-300 hover:bg-gray-50"
+                    ? "border-brand-surf bg-brand-surf/15 dark:bg-brand-surf/25 text-brand-surf dark:text-brand-aqua shadow-md ring-2 ring-brand-surf/30 scale-[1.01]"
+                    : "border-gray-200 dark:border-brand-frost/10 text-text-primary dark:text-text-dark-primary hover:border-brand-surf/40 hover:bg-brand-surf/5 dark:hover:bg-brand-frost/5"
                 }`}
               >
                 <span className="flex items-center gap-3">
                   <span
-                    className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold flex-shrink-0 transition-all ${
                       isSelected
-                        ? "border-secondary bg-secondary text-white"
-                        : "border-gray-300 text-gray-500"
+                        ? "border-brand-surf bg-brand-surf text-white shadow-sm"
+                        : "border-gray-300 dark:border-brand-frost/20 text-gray-500 dark:text-text-dark-muted"
                     }`}
                   >
                     {option.label}
                   </span>
-                  <span className="text-sm">{option.text}</span>
+                  <span className={`text-sm ${isSelected ? "font-semibold" : ""}`}>{option.text}</span>
                 </span>
               </button>
             );
@@ -336,27 +336,29 @@ function MockExamContent() {
 
       {/* Confirm Submit Modal */}
       {showConfirmSubmit && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="card max-w-sm w-full">
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/80 flex items-center justify-center z-50 px-4 backdrop-blur-sm">
+          <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-brand-frost/10 rounded-section shadow-2xl max-w-sm w-full p-6">
             <div className="flex items-center gap-3 mb-4">
-              <AlertTriangle className="w-6 h-6 text-warning" />
-              <h3 className="font-semibold text-lg text-text-light">
+              <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h3 className="font-semibold text-lg text-text-primary dark:text-text-dark-primary">
                 Submit Exam?
               </h3>
             </div>
-            <p className="text-sm text-gray-600 mb-2">
-              You have answered {answeredCount} out of {questions.length}{" "}
+            <p className="text-sm text-text-muted dark:text-text-dark-muted mb-2">
+              You have answered <span className="font-semibold text-text-primary dark:text-text-dark-primary">{answeredCount}</span> out of <span className="font-semibold text-text-primary dark:text-text-dark-primary">{questions.length}</span>{" "}
               questions.
             </p>
             {answeredCount < questions.length && (
-              <p className="text-sm text-warning mb-4">
+              <p className="text-sm text-amber-600 dark:text-amber-400 font-medium mb-4">
                 {questions.length - answeredCount} question(s) are unanswered.
               </p>
             )}
-            <div className="flex gap-3">
+            <div className="flex gap-3 mt-5">
               <button
                 onClick={() => setShowConfirmSubmit(false)}
-                className="btn-secondary flex-1"
+                className="flex-1 px-4 py-2.5 rounded-btn text-sm font-medium border border-gray-300 dark:border-brand-frost/20 text-text-primary dark:text-text-dark-primary bg-white dark:bg-brand-frost/5 hover:bg-gray-50 dark:hover:bg-brand-frost/10 transition-colors"
               >
                 Continue Exam
               </button>
