@@ -1,0 +1,56 @@
+name: App-Dev validation
+
+on:
+  push:
+    branches:
+      - "audit/**"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: Web lint, types and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Safe, non-secret placeholder values allow a build without contacting production services.
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint web app
+        run: npm run lint --workspace=web
+      - name: Type-check web app
+        run: npx tsc --noEmit --project web/tsconfig.json
+      - name: Production build
+        run: npm run build --workspace=web
+
+  mobile:
+    name: Mobile TypeScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Type-check Expo app
+        run: npx tsc --noEmit --project mobile/tsconfig.json
