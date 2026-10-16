@@ -72,7 +72,13 @@ Browser fixtures are test infrastructure: they do not bypass application authent
 - Dependency audits still report advisories. The web production audit has **four high findings** in one linked glob-tool chain (`braces`, `micromatch`, `fast-glob`, `globby`), with no critical/moderate findings in that audit. These are build/tool dependencies, and the affected deep-pattern parser does not have a compatible patched upstream release at the time of this run. They have not been suppressed. The updated production-workspace audit reports **71 affected-package findings: 0 critical, 42 high, 28 moderate and 1 low**. The four prior critical findings were removed by aligning the mobile SDK/server cohort and patching the archive dependency. High/moderate findings remain in the legacy native/build tool chain; this is not a clean security audit, and wider SDK modernization/device validation remain release considerations.
 - This is a learning product, not a proctored exam system: authenticated practice deliberately provides answer explanations. Server grading protects persisted scores; it does not prevent someone consulting practice material.
 
-## 7. Final status
+## 7. Live rollout follow-up
+
+Live REST checks confirmed the 00009 attempt columns and metadata RPC are present after the SQL Editor rollout. A temporary confirmed account successfully signed in; direct answer-key reads, attempt insertion/update and student-link updates were denied. The account's profile existed when read by the server, but its own authenticated read returned no rows. The SQL Editor diagnostic returned no `public.users` policies. Temporary accounts were deleted after testing, with no email sent.
+
+Migration 00010 restores only the owner's SELECT/UPDATE policies, retaining the 00008 column restrictions. The isolated database suite passed after deliberately removing both owner policies and applying the repair twice. The Management API release gate now also requires owner policies and enabled profile RLS. Live repair verification and release promotion remain pending; the Management API credential currently returns HTTP 401. Do not promote until a real account can read its own profile.
+
+## 8. Final status
 
 The application has implemented security, reliability and visual improvements with repeatable unit, browser and database checks. Changes are prepared on the review branch `codex/cryslearn-refinement`; production remains unchanged until the tested schema and release are promoted together. It is **not yet an unconditional production-ready release**: complete the coordinated database rollout, staging integrations, dependency follow-up and native-device validation first.
 

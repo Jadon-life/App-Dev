@@ -20,13 +20,16 @@ In the Supabase Dashboard SQL Editor, run each migration file in order:
 7. `migrations/00007_fix_questions_rls_policy.sql`
 8. `migrations/00008_secure_profile_access.sql`
 9. `migrations/00009_secure_exam_attempts.sql`
+10. `migrations/00010_restore_own_profile_policies.sql`
 
 For an existing database, apply only migrations that have not been applied yet.
 The question-access policy now appears in migration 004, after its referenced
 `user_exam_access` table exists. This fixes clean bootstrap; do not rerun historical
-migrations against an existing database. Migrations 008 and 009 must be applied
+migrations against an existing database. Migrations 008, 009 and 010 must be applied
 before using the updated profile and exam workflows. Review them before applying
 to production; the application does not apply database changes automatically.
+Migration 010 restores owner-only profile access when historical self-profile
+policies are missing. It is safe to rerun and retains the restricted column grants.
 
 ### 3. Seed Data
 
