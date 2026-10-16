@@ -17,8 +17,11 @@ export async function POST(request: Request) {
     if (authError || !user?.email) {
       return NextResponse.json({ error: "Sign in to continue" }, { status: 401 });
     }
-    const { data: exam, error: examError } = await supabase.from("exams")
+    const { data: examRow, error: examError } = await supabase.from("exams")
       .select("id,price_kobo").eq("slug", slug).eq("is_active", true).single();
+    // The existing hand-authored Database schema lacks the relationship metadata
+    // Supabase needs to infer rows from narrowed selects.
+    const exam = examRow as { id: string; price_kobo: number } | null;
     if (examError || !exam || exam.price_kobo !== EXAMS[slug as ExamSlug].price_kobo) {
       return NextResponse.json({ error: "Exam pricing is currently unavailable" }, { status: 409 });
     }
