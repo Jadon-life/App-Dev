@@ -1,121 +1,57 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createServerSupabase } from "@/lib/supabase-server";
 import { EXAMS } from "@shared/constants/exams";
 import type { ExamSlug } from "@/types/database";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { exam_slug, email } = body;
-
-    // Validate exam slug
-    const exam = EXAMS[exam_slug as ExamSlug];
-    if (!exam) {
-      return NextResponse.json(
-        { error: "Invalid exam" },
-        { status: 400 }
-      );
+    const secret = process.env.PAYSTACK_SECRET_KEY;
+    if (!secret) return NextResponse.json({ error: "Payments are unavailable" }, { status: 503 });
+    const payload = await request.json().catch(() => null);
+    const slug = payload?.exam_slug;
+    if (typeof slug !== "string" || !Object.prototype.hasOwnProperty.call(EXAMS, slug)) {
+      return NextResponse.json({ error: "Invalid exam" }, { status: 400 });
     }
-
-    // Get authenticated user
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Can't set cookies in route handler response
-            }
-          },
-        },
-      }
-    );
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    const supabase = createServerSupabase();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user?.email) {
+      return NextResponse.json({ error: "Sign in to continue" }, { status: 401 });
     }
-
-    // Check if already purchased
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: existingAccess } = await (supabase as any)
-      .from("user_exam_access")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("exam_id", exam_slug)
-      .single();
-
-    if (existingAccess) {
-      return NextResponse.json(
-        { error: "You already have access to this exam" },
-        { status: 400 }
-      );
+    const { data: examRow, error: examError } = await supabase.from("exams")
+      .select("id,price_kobo").eq("slug", slug).eq("is_active", true).single();
+    // The existing hand-authored Database schema lacks the relationship metadata
+    // Supabase needs to infer rows from narrowed selects.
+    const exam = examRow as { id: string; price_kobo: number } | null;
+    if (examError || !exam || exam.price_kobo !== EXAMS[slug as ExamSlug].price_kobo) {
+      return NextResponse.json({ error: "Exam pricing is currently unavailable" }, { status: 409 });
     }
+    const { data: access, error: accessError } = await supabase.from("user_exam_access")
+      .select("id").eq("user_id", user.id).eq("exam_id", exam.id).maybeSingle();
+    if (accessError) throw accessError;
+    if (access) return NextResponse.json({ error: "You already own this exam" }, { status: 409 });
 
-    // Initialize Paystack payment
-    const paystackResponse = await fetch(
-      "https://api.paystack.co/transaction/initialize",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email || user.email,
-          amount: exam.price_kobo, // Amount in kobo
-          currency: "NGN",
-          callback_url: `${process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin : "http://localhost:3000"}/api/payments/verify`,
-          metadata: {
-            exam_slug: exam_slug,
-            exam_id: exam_slug, // Will be resolved to UUID on webhook
-            user_id: user.id,
-            custom_fields: [
-              {
-                display_name: "Exam",
-                variable_name: "exam",
-                value: exam.name,
-              },
-            ],
-          },
-        }),
-      }
-    );
-
-    const paystackData = await paystackResponse.json();
-
-    if (!paystackData.status) {
-      return NextResponse.json(
-        { error: paystackData.message || "Payment initialization failed" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      authorization_url: paystackData.data.authorization_url,
-      access_code: paystackData.data.access_code,
-      reference: paystackData.data.reference,
+    const callbackUrl = new URL("/api/payments/verify", request.url).toString();
+    const res = await fetch("https://api.paystack.co/transaction/initialize", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: user.email,
+        amount: exam.price_kobo,
+        currency: "NGN",
+        callback_url: callbackUrl,
+        metadata: { exam_slug: slug, user_id: user.id },
+      }),
+      cache: "no-store",
     });
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || "Internal server error" },
-      { status: 500 }
-    );
+    const data = await res.json();
+    if (!res.ok || !data?.status || !data.data?.authorization_url) {
+      return NextResponse.json({ error: "Unable to start secure checkout" }, { status: 502 });
+    }
+    return NextResponse.json({
+      authorization_url: data.data.authorization_url,
+      reference: data.data.reference,
+    });
+  } catch {
+    return NextResponse.json({ error: "Could not initialize payment" }, { status: 500 });
   }
 }
