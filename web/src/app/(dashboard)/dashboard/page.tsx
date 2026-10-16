@@ -64,7 +64,7 @@ export default function DashboardPage() {
         </div>
       ) : isError ? (
         <section role="alert" className="rounded-section border border-red-300 p-6">
-          <h2 className="font-semibold">Your progress couldn't be loaded.</h2>
+          <h2 className="font-semibold">Your progress could not be loaded.</h2>
           <p className="mt-1 text-sm">Check your connection and try again. Your saved attempts have not been changed.</p>
           <button type="button" onClick={() => refetch()} className="btn-secondary mt-4">Try again</button>
         </section>
