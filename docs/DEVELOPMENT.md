@@ -67,10 +67,12 @@ A project service-role key cannot execute SQL migrations. The reviewed Managemen
 ```sh
 # Check the target project and current schema without applying changes.
 python3 scripts/apply-supabase-migrations.py
-# Apply migrations 00008–00010 in one transaction, then verify live permissions.
+# Apply migrations 00008–00011 in one transaction, then verify live permissions.
 python3 scripts/apply-supabase-migrations.py --apply
 ```
 
 Stage the Vercel review build first. Apply the schema only when ready to promote it; migration 00009 intentionally blocks older browser clients from writing their own scores. Never promote a deployment whose required schema verification fails. The release runner's atomic SQL bundle was also exercised against the disposable PostgreSQL security fixture.
 
 Migration 00010 restores the owner-only profile SELECT/UPDATE policies for existing projects where they are missing. A real sign-in check found a live project with profile rows and table grants but no `public.users` policies: authentication succeeded while profile reads returned no rows. Apply 00010 as `postgres` in the SQL Editor if Management API access is unavailable. It preserves migration 00008's column restrictions and does not enable student linking or profile insertion. Verify a signed-in account can read its own profile before releasing.
+
+Migration 00011 repairs missing owner-only SELECT policies for `mock_attempts` and `user_exam_access`, plus authenticated access to safe question columns. Verify actual owned history/access rows are visible, rather than accepting an empty HTTP 200 response as sufficient. The repair suite removes all five relevant policies and applies 00010/00011 twice before executing the privacy assertions.

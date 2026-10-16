@@ -23,7 +23,7 @@ class ReleaseSafetyTests(unittest.TestCase):
         self.assertIn('"Parents can view linked student"', sql)
 
     def test_success_requires_every_schema_and_permission_gate(self):
-        state = dict.fromkeys(["base_schema_present", "snapshots_present", "revisions_present", "composition_present", "server_can_grade", "server_can_read_answer_keys", "own_profile_policies_present"], True)
+        state = dict.fromkeys(["base_schema_present", "snapshots_present", "revisions_present", "composition_present", "server_can_grade", "server_can_read_answer_keys", "own_profile_policies_present", "own_study_policies_present", "safe_question_policy_present"], True)
         state.update(dict.fromkeys(["client_can_insert_attempts", "client_can_update_attempts", "client_can_link_students", "client_can_read_answer_keys", "unsafe_parent_policy_present"], False))
         self.assertTrue(release.ready(state))
         for key in state:

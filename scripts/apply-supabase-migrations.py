@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply the reviewed 00008–00010 migrations using Supabase's Management API.
+"""Apply the reviewed 00008–00011 migrations using Supabase's Management API.
 
 No project keys, tokens, database passwords or user records are written to disk.
 Default mode checks metadata; --apply executes one atomic transaction.
@@ -19,6 +19,7 @@ MIGRATIONS = (
     "00008_secure_profile_access.sql",
     "00009_secure_exam_attempts.sql",
     "00010_restore_own_profile_policies.sql",
+    "00011_restore_study_read_policies.sql",
 )
 
 
@@ -70,6 +71,20 @@ SELECT
   has_table_privilege('authenticated', 'public.mock_attempts', 'UPDATE') AS client_can_update_attempts,
   has_column_privilege('authenticated', 'public.users', 'linked_student_id', 'UPDATE') AS client_can_link_students,
   has_column_privilege('authenticated', 'public.questions', 'correct_option', 'SELECT') AS client_can_read_answer_keys,
+  (SELECT COUNT(*) = 2 FROM pg_policies WHERE schemaname='public'
+    AND ((tablename='mock_attempts' AND policyname='Users can view own mock attempts')
+      OR (tablename='user_exam_access' AND policyname='Users can view own exam access'))
+    AND cmd='SELECT' AND roles=ARRAY['authenticated']::name[]
+    AND qual='(auth.uid() = user_id)') AND
+  (SELECT COUNT(*) = 2 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+    WHERE n.nspname='public' AND c.relname IN ('mock_attempts','user_exam_access')
+    AND c.relrowsecurity) AS own_study_policies_present,
+  EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='questions'
+    AND policyname='Authenticated users can view questions' AND cmd='SELECT'
+    AND roles=ARRAY['authenticated']::name[] AND qual='true') AND
+  EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+    WHERE n.nspname='public' AND c.relname='questions' AND c.relrowsecurity)
+    AS safe_question_policy_present,
   EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND
     policyname IN ('Parents can view linked student', 'Parents can view linked student attempts',
       'Parents can view linked student exam access')) AS unsafe_parent_policy_present;
@@ -89,7 +104,7 @@ def management_query(reference, token, query):
 
 def ready(state):
     return state.get("base_schema_present") is True and all(
-        state.get(name) is True for name in ("snapshots_present", "revisions_present", "composition_present", "server_can_grade", "server_can_read_answer_keys", "own_profile_policies_present")
+        state.get(name) is True for name in ("snapshots_present", "revisions_present", "composition_present", "server_can_grade", "server_can_read_answer_keys", "own_profile_policies_present", "own_study_policies_present", "safe_question_policy_present")
     ) and all(state.get(name) is False for name in (
         "client_can_insert_attempts", "client_can_update_attempts", "client_can_link_students",
         "client_can_read_answer_keys", "unsafe_parent_policy_present",
@@ -108,7 +123,7 @@ def main():
     if not isinstance(before, list) or len(before) != 1 or not before[0].get("base_schema_present"):
         raise ValueError("The expected CrysLearn schema was not found. No changes were made.")
     if ready(before[0]):
-        print("PASS: Supabase schema and permission checks already match migrations 00008–00010.")
+        print("PASS: Supabase schema and permission checks already match migrations 00008–00011.")
         return
     if not args.apply:
         print("Pending: " + ", ".join(MIGRATIONS) + ". Use --apply for the reviewed atomic migration.")
@@ -117,7 +132,7 @@ def main():
     after = management_query(reference, token, CHECK_SQL)
     if not isinstance(after, list) or len(after) != 1 or not ready(after[0]):
         raise ValueError("Migration request completed, but schema/permission verification failed. Inspect the project before promoting the deployment.")
-    print("PASS: migrations 00008–00010 applied atomically and live schema/permission checks passed.")
+    print("PASS: migrations 00008–00011 applied atomically and live schema/permission checks passed.")
 
 
 if __name__ == "__main__":

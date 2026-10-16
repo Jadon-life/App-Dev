@@ -34,7 +34,7 @@ run_sql() {
 
 run_sql "$TASK_REPO_ROOT/supabase/tests/bootstrap.sql"
 for migration in "$TASK_REPO_ROOT"/supabase/migrations/*.sql; do
-  if [[ -n "${TEST_RELEASE_BUNDLE:-}" && "${migration##*/}" =~ ^(0000[89]|00010)_ ]]; then
+  if [[ -n "${TEST_RELEASE_BUNDLE:-}" && "${migration##*/}" =~ ^(0000[89]|0001[01])_ ]]; then
     continue
   fi
   printf 'Applying %s\n' "${migration##*/}"
