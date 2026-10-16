@@ -1,219 +1,245 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
+import { authErrorMessage, safeAuthRedirect } from "@/lib/auth-routing";
 import { EXAMS, EXAM_SLUGS } from "@shared/constants/exams";
-import { GraduationCap, Users, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Check, GraduationCap, ShieldCheck, Users } from "lucide-react";
 import type { ExamSlug, UserRole } from "@/types/database";
 
-export default function OnboardingPage() {
+function OnboardingForm() {
+  const { user, loading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
   const [role, setRole] = useState<UserRole | null>(null);
   const [selectedExams, setSelectedExams] = useState<ExamSlug[]>([]);
-  const [studentId, setStudentId] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const { user } = useAuth();
-  const router = useRouter();
-
-  const toggleExam = (slug: ExamSlug) => {
-    setSelectedExams((prev) =>
-      prev.includes(slug) ? prev.filter((e) => e !== slug) : [...prev, slug]
+  const toggleExam = (slug: ExamSlug) =>
+    setSelectedExams((previous) =>
+      previous.includes(slug) ? previous.filter((exam) => exam !== slug) : [...previous, slug],
     );
-  };
 
-  const handleSubmit = async () => {
-    if (!role) {
-      setError("Please select your role");
-      return;
-    }
-    if (role === "student" && selectedExams.length === 0) {
-      setError("Please select at least one exam");
-      return;
-    }
-    if (role === "parent" && !studentId.trim()) {
-      setError("Please enter your child's student ID");
-      return;
-    }
-
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (saving) return;
+    if (!role) return setError("Choose student or parent to continue.");
+    if (role === "student" && selectedExams.length === 0)
+      return setError("Choose at least one exam you're preparing for.");
+    if (!user) return setError("Your session could not be loaded. Please sign in again.");
     setError("");
-    setLoading(true);
+    setSaving(true);
 
     try {
-      if (!user) throw new Error("Not authenticated");
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: updateError } = await (supabase as any)
-        .from("users")
-        .update({
-          role,
-          name:
-            user.user_metadata?.full_name ||
+      const name =
+        String(
+          user.user_metadata?.full_name ||
             user.user_metadata?.name ||
             user.email?.split("@")[0] ||
-            "",
-          ...(role === "parent" && studentId
-            ? { linked_student_id: studentId }
-            : {}),
-        })
-        .eq("id", user.id);
-
+            "Learner",
+        )
+          .trim()
+          .slice(0, 100) || "Learner";
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({ role, name })
+        .eq("id", user.id)
+        .select("id")
+        .single();
       if (updateError) throw updateError;
-
-      // Redirect based on role (per Doc 03)
-      if (role === "parent") {
-        router.push("/parent");
-      } else {
-        router.push("/dashboard");
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to save. Please try again.");
-    } finally {
-      setLoading(false);
+      // Preferences are not entitlements; purchases continue to use server access records.
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: {
+          preferred_exams: role === "student" ? selectedExams : [],
+          onboarding_completed: true,
+        },
+      });
+      if (metadataError) throw metadataError;
+      const destination = safeAuthRedirect(
+        searchParams.get("next"),
+        role === "parent" ? "/parent" : "/dashboard",
+      );
+      window.location.assign(
+        destination === "/dashboard" && role === "parent" ? "/parent" : destination,
+      );
+    } catch (failure: unknown) {
+      setError(authErrorMessage(failure, "We couldn't save your preferences. Please try again."));
+      setSaving(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background-light flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary">
-            Let&apos;s set you up
-          </h1>
-          <p className="mt-2 text-gray-500">
-            Tell us about yourself so we can personalise your experience.
-          </p>
-        </div>
-
-        <div className="card space-y-8">
-          {/* Error */}
-          {error && (
-            <div className="p-3 bg-danger/10 border border-danger/20 rounded-btn text-danger text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Step 1: Role Selection */}
-          <div>
-            <h2 className="text-lg font-semibold text-text-light mb-4">
-              I am a...
-            </h2>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setRole("student")}
-                className={`p-5 rounded-card border-2 transition-all text-center ${
-                  role === "student"
-                    ? "border-secondary bg-secondary/5"
-                    : "border-gray-100 hover:border-gray-200"
-                }`}
-              >
-                <GraduationCap
-                  className={`w-8 h-8 mx-auto mb-2 ${
-                    role === "student" ? "text-secondary" : "text-gray-400"
-                  }`}
-                />
-                <span
-                  className={`font-medium ${
-                    role === "student" ? "text-secondary" : "text-text-light"
-                  }`}
-                >
-                  Student
-                </span>
-              </button>
-
-              <button
-                onClick={() => setRole("parent")}
-                className={`p-5 rounded-card border-2 transition-all text-center ${
-                  role === "parent"
-                    ? "border-secondary bg-secondary/5"
-                    : "border-gray-100 hover:border-gray-200"
-                }`}
-              >
-                <Users
-                  className={`w-8 h-8 mx-auto mb-2 ${
-                    role === "parent" ? "text-secondary" : "text-gray-400"
-                  }`}
-                />
-                <span
-                  className={`font-medium ${
-                    role === "parent" ? "text-secondary" : "text-text-light"
-                  }`}
-                >
-                  Parent
-                </span>
-              </button>
-            </div>
+    <main className="min-h-screen bg-background-light px-5 py-8 text-text-primary dark:bg-background-dark dark:text-text-dark-primary sm:py-12">
+      <div className="mx-auto max-w-xl">
+        <Link href="/" className="mb-12 inline-flex items-center gap-2 text-lg font-bold">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-navy text-brand-aqua">
+            C
+          </span>
+          CrysLearn
+        </Link>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-brand-teal dark:text-brand-aqua">
+          Make it yours
+        </p>
+        <h1 className="font-heading text-4xl font-bold tracking-tight sm:text-5xl">
+          A good place to begin.
+        </h1>
+        <p className="mb-9 mt-4 max-w-md text-sm leading-6 text-text-muted dark:text-text-dark-muted">
+          Tell us how you&apos;ll use CrysLearn. We&apos;ll keep your preparation focused on what
+          matters to you.
+        </p>
+        {error && (
+          <div
+            id="onboarding-error"
+            role="alert"
+            className="mb-6 rounded-btn border border-danger/25 bg-danger/10 p-4 text-sm text-red-700 dark:text-red-300"
+          >
+            {error}{" "}
+            {!user && (
+              <Link href="/login" className="underline">
+                Sign in
+              </Link>
+            )}
           </div>
-
-          {/* Step 2a: Exam Selection (Student) */}
+        )}
+        <form
+          onSubmit={handleSubmit}
+          aria-describedby={error ? "onboarding-error" : undefined}
+          aria-busy={saving || authLoading}
+          className="space-y-8"
+        >
+          <fieldset disabled={saving || authLoading}>
+            <legend className="mb-4 text-sm font-semibold">I&apos;m here as a…</legend>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {(
+                [
+                  {
+                    value: "student",
+                    title: "Student",
+                    description: "Build my confidence for exam day.",
+                    Icon: GraduationCap,
+                  },
+                  {
+                    value: "parent",
+                    title: "Parent",
+                    description: "Support my child's preparation.",
+                    Icon: Users,
+                  },
+                ] as const
+              ).map(({ value, title, description, Icon }) => (
+                <label
+                  key={value}
+                  className={`relative flex cursor-pointer flex-col rounded-card border p-5 transition-colors focus-within:ring-2 focus-within:ring-brand-teal ${role === value ? "border-brand-teal bg-brand-teal/5 dark:border-brand-aqua" : "border-brand-teal/15 bg-surface-light hover:border-brand-teal/50 dark:border-white/15 dark:bg-surface-dark"}`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value={value}
+                    checked={role === value}
+                    onChange={() => setRole(value)}
+                    className="sr-only"
+                    required
+                  />
+                  <Icon
+                    size={25}
+                    className="mb-4 text-brand-teal dark:text-brand-aqua"
+                    aria-hidden="true"
+                  />
+                  <span className="font-semibold">{title}</span>
+                  <span className="mt-1 text-xs leading-5 text-text-muted dark:text-text-dark-muted">
+                    {description}
+                  </span>
+                  {role === value && (
+                    <Check
+                      size={18}
+                      className="absolute right-4 top-4 text-brand-teal dark:text-brand-aqua"
+                      aria-hidden="true"
+                    />
+                  )}
+                </label>
+              ))}
+            </div>
+          </fieldset>
           {role === "student" && (
-            <div>
-              <h2 className="text-lg font-semibold text-text-light mb-4">
-                Which exam(s) are you preparing for?
-              </h2>
+            <fieldset disabled={saving || authLoading}>
+              <legend className="mb-1 text-sm font-semibold">What are you preparing for?</legend>
+              <p className="mb-4 text-xs leading-5 text-text-muted dark:text-text-dark-muted">
+                Choose one or more. You can explore every exam before purchasing access.
+              </p>
               <div className="grid grid-cols-2 gap-3">
                 {EXAM_SLUGS.map((slug) => {
-                  const exam = EXAMS[slug];
                   const selected = selectedExams.includes(slug);
                   return (
                     <button
                       key={slug}
+                      type="button"
+                      aria-pressed={selected}
                       onClick={() => toggleExam(slug)}
-                      className={`p-4 rounded-card border-2 transition-all text-left relative ${
-                        selected
-                          ? "border-secondary bg-secondary/5"
-                          : "border-gray-100 hover:border-gray-200"
-                      }`}
+                      className={`relative min-h-24 rounded-btn border p-4 text-left transition-colors ${selected ? "border-brand-teal bg-brand-teal/5 dark:border-brand-aqua" : "border-brand-teal/15 bg-surface-light hover:border-brand-teal/50 dark:border-white/15 dark:bg-surface-dark"}`}
                     >
+                      <span className="block pr-5 text-lg font-semibold">{EXAMS[slug].name}</span>
+                      <span className="mt-1 block text-xs leading-5 text-text-muted dark:text-text-dark-muted">
+                        {EXAMS[slug].fullName.split("(")[0].trim()}
+                      </span>
                       {selected && (
-                        <CheckCircle2 className="absolute top-2 right-2 w-5 h-5 text-secondary" />
+                        <Check
+                          size={17}
+                          className="absolute right-3 top-4 text-brand-teal dark:text-brand-aqua"
+                          aria-hidden="true"
+                        />
                       )}
-                      <span className="font-semibold text-text-light block">
-                        {exam.name}
-                      </span>
-                      <span className="text-xs text-gray-500 mt-1 block">
-                        {exam.fullName.split("(")[0].trim()}
-                      </span>
                     </button>
                   );
                 })}
               </div>
-            </div>
+            </fieldset>
           )}
-
-          {/* Step 2b: Link Student (Parent) */}
           {role === "parent" && (
-            <div>
-              <h2 className="text-lg font-semibold text-text-light mb-2">
-                Link to your child&apos;s account
-              </h2>
-              <p className="text-sm text-gray-500 mb-4">
-                Enter your child&apos;s CrysLearn student ID. You can find it in
-                their Settings page.
-              </p>
-              <input
-                type="text"
-                value={studentId}
-                onChange={(e) => setStudentId(e.target.value)}
-                className="input-field"
-                placeholder="Enter student ID (e.g. abc12345-...)"
+            <div className="flex gap-3 rounded-btn border border-brand-teal/15 bg-brand-teal/5 p-4 dark:border-white/15">
+              <ShieldCheck
+                size={21}
+                className="mt-0.5 shrink-0 text-brand-teal dark:text-brand-aqua"
+                aria-hidden="true"
               />
+              <div>
+                <h2 className="text-sm font-semibold">Your child&apos;s privacy comes first.</h2>
+                <p className="mt-1 text-xs leading-6 text-text-muted dark:text-text-dark-muted">
+                  You can create your parent account now. Linking student progress needs a secure
+                  approval flow and is not available yet.
+                </p>
+              </div>
             </div>
           )}
-
-          {/* Submit */}
           <button
-            onClick={handleSubmit}
-            disabled={loading || !role}
-            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            type="submit"
+            disabled={saving || authLoading || !role}
+            className="btn-primary flex w-full items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Saving..." : "Continue to Dashboard"}
+            {saving
+              ? "Saving your preferences…"
+              : authLoading
+                ? "Loading your account…"
+                : "Let's get started"}
+            <ArrowRight size={18} aria-hidden="true" />
           </button>
-        </div>
+        </form>
       </div>
-    </div>
+    </main>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center" aria-busy="true">
+          <p role="status">Loading your preferences…</p>
+        </main>
+      }
+    >
+      <OnboardingForm />
+    </Suspense>
   );
 }

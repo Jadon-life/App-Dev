@@ -2,13 +2,13 @@
 
 /**
  * ReactiveBackground — Full WebGL background using raw Three.js (not R3F).
- * 
+ *
  * WHY RAW THREE.JS:
  * @react-three/fiber creates its own React reconciler which conflicts with
  * Next.js 14's App Router React instance, causing the "Cannot read properties
  * of undefined (reading 'S')" crash. By using Three.js directly inside useEffect,
  * we bypass the reconciler entirely while keeping all WebGL capabilities.
- * 
+ *
  * FEATURES:
  * - Custom vertex/fragment shaders for morphing gradient
  * - Reacts to mouse position (smooth lerp following)
@@ -87,24 +87,32 @@ export default function ReactiveBackground() {
   const isDarkRef = useRef(true);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     // ═══ THREE.JS SETUP ═══
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10);
     camera.position.z = 1.8;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false });
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false });
+    } catch {
+      // The CSS page background remains available when WebGL is unsupported.
+      return;
+    }
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-    containerRef.current.appendChild(renderer.domElement);
+    container.appendChild(renderer.domElement);
 
     // ═══ SHADER MATERIAL ═══
     const uniforms = {
       uTime: { value: 0 },
       uMouse: { value: new THREE.Vector2(0.5, 0.5) },
       uScroll: { value: 0 },
-      uDark: { value: 1.0 },
+      uDark: { value: document.documentElement.classList.contains("dark") ? 1 : 0 },
     };
 
     const material = new THREE.ShaderMaterial({
@@ -119,6 +127,7 @@ export default function ReactiveBackground() {
 
     // ═══ EVENT LISTENERS ═══
     const handleMouseMove = (e: MouseEvent) => {
+      if (motion.matches) return;
       targetMouseRef.current.x = e.clientX / window.innerWidth;
       targetMouseRef.current.y = 1.0 - e.clientY / window.innerHeight;
     };
@@ -132,13 +141,18 @@ export default function ReactiveBackground() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      if (motion.matches && !document.hidden) renderFrame();
     };
 
     // Theme observer — watches for class changes on <html>
     const themeObserver = new MutationObserver(() => {
       isDarkRef.current = document.documentElement.classList.contains("dark");
+      if (motion.matches && !document.hidden) renderFrame();
     });
-    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
     isDarkRef.current = document.documentElement.classList.contains("dark");
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -146,13 +160,12 @@ export default function ReactiveBackground() {
     window.addEventListener("resize", handleResize);
 
     // ═══ RENDER LOOP ═══
-    let animationId: number;
+    let animationId = 0;
+    let disposed = false;
     const clock = new THREE.Clock();
 
-    const animate = () => {
-      animationId = requestAnimationFrame(animate);
-
-      uniforms.uTime.value = clock.getElapsedTime();
+    const renderFrame = () => {
+      uniforms.uTime.value = motion.matches ? 0 : clock.getElapsedTime();
 
       // Smooth lerp mouse (fluid cursor-following)
       mouseRef.current.x += (targetMouseRef.current.x - mouseRef.current.x) * 0.04;
@@ -164,16 +177,36 @@ export default function ReactiveBackground() {
 
       // Smooth theme transition
       const targetDark = isDarkRef.current ? 1.0 : 0.0;
-      uniforms.uDark.value += (targetDark - uniforms.uDark.value) * 0.05;
+      if (motion.matches) uniforms.uDark.value = targetDark;
+      else uniforms.uDark.value += (targetDark - uniforms.uDark.value) * 0.05;
 
       renderer.render(scene, camera);
     };
 
-    animate();
+    const animate = () => {
+      if (disposed || document.hidden || motion.matches) return;
+      renderFrame();
+      animationId = requestAnimationFrame(animate);
+    };
+
+    const updateAnimation = () => {
+      cancelAnimationFrame(animationId);
+      animationId = 0;
+      if (document.hidden) return;
+      if (motion.matches) renderFrame();
+      else animate();
+    };
+    motion.addEventListener("change", updateAnimation);
+    document.addEventListener("visibilitychange", updateAnimation);
+    handleScroll();
+    updateAnimation();
 
     // ═══ CLEANUP — Prevents memory leaks ═══
     return () => {
+      disposed = true;
       cancelAnimationFrame(animationId);
+      motion.removeEventListener("change", updateAnimation);
+      document.removeEventListener("visibilitychange", updateAnimation);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleResize);
@@ -181,15 +214,15 @@ export default function ReactiveBackground() {
       geometry.dispose();
       material.dispose();
       renderer.dispose();
-      if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
-        containerRef.current.removeChild(renderer.domElement);
-      }
+      renderer.forceContextLoss();
+      renderer.domElement.remove();
     };
   }, []);
 
   return (
     <div
       ref={containerRef}
+      aria-hidden="true"
       className="fixed inset-0 -z-10 pointer-events-none"
     />
   );

@@ -1,62 +1,50 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { createServerSupabase } from "@/lib/supabase-server";
+import { safeAuthRedirect } from "@/lib/auth-routing";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
+  const next = safeAuthRedirect(searchParams.get("next"));
+  const failed = new URL("/login", origin);
+  failed.searchParams.set("error", "auth_callback_failed");
+  failed.searchParams.set("redirect", next);
 
-  if (code) {
-    const cookieStore = cookies();
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // The `cookies()` API can only set in Route Handlers
-            }
-          },
-        },
-      }
-    );
-
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (!error) {
-      // Check if user has completed onboarding
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        const { data: profile } = await supabase
-          .from("users")
-          .select("role, name")
-          .eq("id", user.id)
-          .single();
-
-        // If no profile or no name set, redirect to onboarding
-        if (!profile || !profile.name) {
-          return NextResponse.redirect(`${origin}/onboarding`);
+  if (code && !searchParams.has("error")) {
+    try {
+      const supabase = await createServerSupabase();
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (!error) {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+        if (user && !userError) {
+          let destination = new URL(next, origin);
+          if (!user.user_metadata?.onboarding_completed) {
+            destination = new URL("/onboarding", origin);
+            destination.searchParams.set("next", next);
+          } else if (next === "/dashboard") {
+            const { data: profile, error: profileError } = await supabase
+              .from("users")
+              .select("role")
+              .eq("id", user.id)
+              .single();
+            if (profileError) return NextResponse.redirect(failed);
+            if (profile.role === "parent") destination = new URL("/parent", origin);
+          }
+          const response = NextResponse.redirect(destination);
+          response.headers.set("Cache-Control", "private, no-store");
+          return response;
         }
       }
-
-      return NextResponse.redirect(`${origin}${next}`);
+    } catch {
+      // Auth details and provider error messages must not leak into redirect URLs.
     }
   }
 
-  // If something went wrong, redirect to login with error
-  return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
+  const response = NextResponse.redirect(failed);
+  response.headers.set("Cache-Control", "private, no-store");
+  return response;
 }

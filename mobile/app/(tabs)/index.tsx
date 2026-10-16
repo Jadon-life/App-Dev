@@ -1,86 +1,52 @@
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors, Spacing, FontSize, BorderRadius } from "@/src/constants/theme";
-
+import { router } from "expo-router";
+import { Text, View } from "react-native";
+import { Button, Heading, Screen, ui } from "../../src/components/ui";
+import { useProfile } from "../../src/lib/study-data";
 export default function HomeScreen() {
+  const { data: profile } = useProfile();
+  const parent = profile?.role === "parent";
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.greeting}>Welcome back 👋</Text>
-          <Text style={styles.title}>Your Dashboard</Text>
-        </View>
-
-        {/* Empty State — per Document 03 */}
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>📚</Text>
-          <Text style={styles.emptyTitle}>Your learning journey begins here</Text>
-          <Text style={styles.emptyDescription}>
-            Pick your first exam to get started.
-          </Text>
-          <TouchableOpacity style={styles.ctaButton}>
-            <Text style={styles.ctaText}>Browse Exams</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <Screen>
+      <Heading
+        eyebrow="CrysLearn / Study desk"
+        title={`Welcome, ${profile?.name?.split(" ")[0] || "learner"}.`}
+        description={
+          parent
+            ? "A little encouragement can make a big difference."
+            : "Give your next exam a little focus today."
+        }
+      />
+      <View style={[ui.card, { paddingVertical: 32, gap: 20 }]}>
+        <Text style={ui.eyebrow}>
+          {parent ? "Support their next chapter" : "One step at a time"}
+        </Text>
+        <Text accessibilityRole="header" style={ui.title}>
+          {parent ? "Encouragement starts with trust." : "Preparation begins with practice."}
+        </Text>
+        <Text style={ui.body}>
+          {parent
+            ? "Student progress stays private. Parent sharing will need student-approved access before results can be shown."
+            : "Find your exam, check your access, and continue your practice on the web."}
+        </Text>
+        <Button
+          title={parent ? "About parent access" : "Explore exams"}
+          onPress={() => router.push(parent ? "/(tabs)/progress" : "/(tabs)/exams")}
+        />
+      </View>
+      <View style={ui.notice}>
+        <Text style={ui.heading}>Your account travels with you.</Text>
+        <Text style={ui.body}>
+          The mobile study desk keeps your profile, exam access, and completed attempts in sync.
+          Practice sessions and payments currently open on the CrysLearn website.
+        </Text>
+        <Text style={ui.small}>You may need to sign in again in your browser.</Text>
+      </View>
+      <View style={ui.rule} />
+      <Button
+        title="View learning profile"
+        secondary
+        onPress={() => router.push("/(tabs)/settings")}
+      />
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.dark,
-  },
-  header: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
-  greeting: {
-    color: Colors.text.dark + "99",
-    fontSize: FontSize.sm,
-  },
-  title: {
-    color: Colors.text.dark,
-    fontSize: FontSize.xxl,
-    fontWeight: "700",
-    marginTop: Spacing.xs,
-  },
-  emptyState: {
-    alignItems: "center",
-    paddingTop: Spacing.xxl * 2,
-    paddingHorizontal: Spacing.lg,
-  },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: Spacing.md,
-  },
-  emptyTitle: {
-    color: Colors.text.dark,
-    fontSize: FontSize.lg,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  emptyDescription: {
-    color: Colors.text.dark + "99",
-    fontSize: FontSize.md,
-    textAlign: "center",
-    marginTop: Spacing.sm,
-  },
-  ctaButton: {
-    backgroundColor: Colors.secondary,
-    borderRadius: BorderRadius.btn,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    marginTop: Spacing.lg,
-    minHeight: 44,
-    justifyContent: "center",
-  },
-  ctaText: {
-    color: "#FFFFFF",
-    fontSize: FontSize.md,
-    fontWeight: "600",
-  },
-});

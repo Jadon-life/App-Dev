@@ -1,51 +1,63 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 
 type Theme = "dark" | "light";
-
-interface ThemeContextType {
-  theme: Theme;
-  toggleTheme: () => void;
-  isDark: boolean;
-}
-
-const ThemeContext = createContext<ThemeContextType>({
-  theme: "dark",
+const key = "cryslearn-theme";
+const ThemeContext = createContext({
+  theme: "light" as Theme,
   toggleTheme: () => {},
-  isDark: true,
+  isDark: false,
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark");
-
+  const [theme, setTheme] = useState<Theme>("light");
+  const [ready, setReady] = useState(false);
   useEffect(() => {
-    // Check localStorage or system preference
-    const saved = localStorage.getItem("cryslearn-theme") as Theme | null;
-    if (saved) {
-      setTheme(saved);
-    } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
-      setTheme("light");
-    }
+    const system = window.matchMedia("(prefers-color-scheme: dark)");
+    const read = () => {
+      let saved: string | null = null;
+      try {
+        saved = localStorage.getItem(key);
+      } catch {
+        /* Private browsing can deny storage. */
+      }
+      setTheme(saved === "light" || saved === "dark" ? saved : system.matches ? "dark" : "light");
+      setReady(true);
+    };
+    read();
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === key || event.key === null) read();
+    };
+    const onSystem = () => read();
+    window.addEventListener("storage", onStorage);
+    system.addEventListener("change", onSystem);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      system.removeEventListener("change", onSystem);
+    };
   }, []);
-
   useEffect(() => {
-    // Apply theme class to HTML element for CSS variable switching
-    document.documentElement.classList.remove("light", "dark");
-    document.documentElement.classList.add(theme);
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("cryslearn-theme", theme);
-  }, [theme]);
-
+    if (!ready) return;
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.dataset.theme = theme;
+  }, [theme, ready]);
   const toggleTheme = useCallback(() => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    setTheme((previous) => {
+      const next = previous === "dark" ? "light" : "dark";
+      try {
+        localStorage.setItem(key, next);
+      } catch {
+        /* Theme remains usable without storage. */
+      }
+      return next;
+    });
   }, []);
-
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, isDark: theme === "dark" }}>
-      {children}
-    </ThemeContext.Provider>
+  const value = useMemo(
+    () => ({ theme, toggleTheme, isDark: theme === "dark" }),
+    [theme, toggleTheme],
   );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

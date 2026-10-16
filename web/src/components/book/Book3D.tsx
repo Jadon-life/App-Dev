@@ -2,14 +2,14 @@
 
 /**
  * Book3D — Realistic thick 3D book standing upright, slightly angled, slightly open.
- * 
+ *
  * Visual concept: "Picking a book from a library shelf"
  * - Book stands upright facing viewer (like on a shelf)
  * - Tilted at a slight angle so you see: front cover + spine + page edges
  * - Slightly cracked open (~15°) — inviting you to open it
  * - Front cover has "CrysLearn" rendered via CanvasTexture
  * - On click: cover swings open → pages flip one by one → transition
- * 
+ *
  * 3D construction:
  * - Front/back covers: BoxGeometry with real thickness (0.04 units)
  * - Page block: BoxGeometry representing stacked pages (visible from top/right)
@@ -23,10 +23,13 @@ import gsap from "gsap";
 
 interface Book3DProps {
   onComplete: () => void;
+  onUnavailable?: () => void;
   isFlipping: boolean;
 }
 
-export default function Book3D({ onComplete, isFlipping }: Book3DProps) {
+export default function Book3D({ onComplete, isFlipping, onUnavailable }: Book3DProps) {
+  const flippingRef = useRef(isFlipping);
+  flippingRef.current = isFlipping;
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<{
     book: THREE.Group;
@@ -45,7 +48,13 @@ export default function Book3D({ onComplete, isFlipping }: Book3DProps) {
     camera.position.set(1.5, 0.8, 4.5);
     camera.lookAt(0, 0, 0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    } catch {
+      onUnavailable?.();
+      return;
+    }
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.setClearColor(0x000000, 0);
@@ -59,7 +68,7 @@ export default function Book3D({ onComplete, isFlipping }: Book3DProps) {
     keyLight.position.set(3, 5, 4);
     keyLight.castShadow = true;
     scene.add(keyLight);
-    const fillLight = new THREE.DirectionalLight(0x6C3AE0, 0.5);
+    const fillLight = new THREE.DirectionalLight(0x6c3ae0, 0.5);
     fillLight.position.set(-4, 3, 2);
     scene.add(fillLight);
     const backLight = new THREE.DirectionalLight(0x00b4d8, 0.3);
@@ -139,21 +148,33 @@ export default function Book3D({ onComplete, isFlipping }: Book3DProps) {
 
     // Back cover
     const backCoverGeo = new THREE.BoxGeometry(W, H, coverThick);
-    const backCoverMat = new THREE.MeshStandardMaterial({ color: 0x03045e, roughness: 0.4, metalness: 0.2 });
+    const backCoverMat = new THREE.MeshStandardMaterial({
+      color: 0x03045e,
+      roughness: 0.4,
+      metalness: 0.2,
+    });
     const backCoverMesh = new THREE.Mesh(backCoverGeo, backCoverMat);
     backCoverMesh.position.set(W / 2, 0, -pageBlockThick / 2 - coverThick / 2);
     book.add(backCoverMesh);
 
     // Spine
     const spineGeo = new THREE.BoxGeometry(coverThick, H, pageBlockThick + coverThick * 2);
-    const spineMat = new THREE.MeshStandardMaterial({ color: 0x023e8a, roughness: 0.35, metalness: 0.3 });
+    const spineMat = new THREE.MeshStandardMaterial({
+      color: 0x023e8a,
+      roughness: 0.35,
+      metalness: 0.3,
+    });
     const spine = new THREE.Mesh(spineGeo, spineMat);
     spine.position.set(-coverThick / 2, 0, 0);
     book.add(spine);
 
     // Page block (visible thickness)
     const pageBlockGeo = new THREE.BoxGeometry(W - 0.05, H - 0.04, pageBlockThick);
-    const pageBlockMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.95, metalness: 0 });
+    const pageBlockMat = new THREE.MeshStandardMaterial({
+      color: 0xf8fafc,
+      roughness: 0.95,
+      metalness: 0,
+    });
     const pageBlock = new THREE.Mesh(pageBlockGeo, pageBlockMat);
     pageBlock.position.set(W / 2, 0, 0);
     book.add(pageBlock);
@@ -163,7 +184,12 @@ export default function Book3D({ onComplete, isFlipping }: Book3DProps) {
     for (let i = 0; i < numFlipPages; i++) {
       const pageGeo = new THREE.PlaneGeometry(W - 0.06, H - 0.05);
       pageGeo.translate((W - 0.06) / 2, 0, 0);
-      const pageMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, metalness: 0, side: THREE.DoubleSide });
+      const pageMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.9,
+        metalness: 0,
+        side: THREE.DoubleSide,
+      });
       const page = new THREE.Mesh(pageGeo, pageMat);
       page.position.set(0.03, 0, pageBlockThick / 2 - i * flipPageGap - 0.01);
       book.add(page);
@@ -180,7 +206,7 @@ export default function Book3D({ onComplete, isFlipping }: Book3DProps) {
     const animate = () => {
       animId = requestAnimationFrame(animate);
       const t = clock.getElapsedTime();
-      if (!isFlipping) {
+      if (!flippingRef.current) {
         book.position.y = Math.sin(t * 0.5) * 0.02;
         book.rotation.y = -0.35 + Math.sin(t * 0.3) * 0.015;
       }
@@ -202,9 +228,10 @@ export default function Book3D({ onComplete, isFlipping }: Book3DProps) {
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", onResize);
+      sceneRef.current = null;
       renderer.dispose();
       frontCoverGeo.dispose();
-      frontCoverMats.forEach(m => m.dispose());
+      frontCoverMats.forEach((m) => m.dispose());
       backCoverGeo.dispose();
       backCoverMat.dispose();
       spineGeo.dispose();
@@ -212,7 +239,10 @@ export default function Book3D({ onComplete, isFlipping }: Book3DProps) {
       pageBlockGeo.dispose();
       pageBlockMat.dispose();
       coverTexture.dispose();
-      pages.forEach(p => { p.geometry.dispose(); (p.material as THREE.Material).dispose(); });
+      pages.forEach((p) => {
+        p.geometry.dispose();
+        (p.material as THREE.Material).dispose();
+      });
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -223,37 +253,54 @@ export default function Book3D({ onComplete, isFlipping }: Book3DProps) {
     if (!isFlipping || !sceneRef.current) return;
     const { book, frontCover, pages } = sceneRef.current;
 
-    const tl = gsap.timeline({
-      onComplete: () => {
-        gsap.to(book.position, { z: 2.5, y: 0, duration: 1.2, ease: "power2.in", delay: 0.2 });
-        gsap.to(book.scale, { x: 2, y: 2, z: 2, duration: 1.2, ease: "power2.in", delay: 0.2, onComplete: onComplete });
-      },
+    const animation = gsap.context(() => {
+      const tl = gsap.timeline({
+        onComplete: () => {
+          gsap.to(book.position, { z: 2.5, y: 0, duration: 1.2, ease: "power2.in", delay: 0.2 });
+          gsap.to(book.scale, {
+            x: 2,
+            y: 2,
+            z: 2,
+            duration: 1.2,
+            ease: "power2.in",
+            delay: 0.2,
+            onComplete: onComplete,
+          });
+        },
+      });
+
+      // Straighten book slightly for opening view
+      gsap.to(book.rotation, { y: -0.15, x: 0, duration: 0.6, ease: "power2.out" });
+      gsap.to(book.position, { y: 0, duration: 0.4, ease: "power2.out" });
+
+      // Open front cover — swings open 90° (perpendicular, like lifting a book cover up)
+      tl.to(frontCover.rotation, { y: -Math.PI / 2, duration: 1.8, ease: "power3.inOut" }, 0.2);
+
+      // Flip pages — each page rotates 90° and STAYS UPRIGHT (perpendicular)
+      // This creates the open-magazine/book spread look from the reference image
+      // -Math.PI/2 = 90 degrees = page stands vertically
+      pages.forEach((page, i) => {
+        tl.to(
+          page.rotation,
+          { y: -Math.PI / 2, duration: 1.3, ease: "power2.inOut" },
+          1.2 + i * 0.35,
+        );
+        // Fan pages out slightly — each page offsets a bit so they spread
+        tl.to(
+          page.position,
+          { z: -(i * 0.015) - 0.02, x: -(i * 0.02), duration: 0.4, ease: "power1.out" },
+          1.2 + i * 0.35 + 0.8,
+        );
+      });
     });
-
-    // Straighten book slightly for opening view
-    gsap.to(book.rotation, { y: -0.15, x: 0, duration: 0.6, ease: "power2.out" });
-    gsap.to(book.position, { y: 0, duration: 0.4, ease: "power2.out" });
-
-    // Open front cover — swings open 90° (perpendicular, like lifting a book cover up)
-    tl.to(frontCover.rotation, { y: -Math.PI / 2, duration: 1.8, ease: "power3.inOut" }, 0.2);
-
-    // Flip pages — each page rotates 90° and STAYS UPRIGHT (perpendicular)
-    // This creates the open-magazine/book spread look from the reference image
-    // -Math.PI/2 = 90 degrees = page stands vertically
-    pages.forEach((page, i) => {
-      tl.to(
-        page.rotation,
-        { y: -Math.PI / 2, duration: 1.3, ease: "power2.inOut" },
-        1.2 + i * 0.35
-      );
-      // Fan pages out slightly — each page offsets a bit so they spread
-      tl.to(
-        page.position,
-        { z: -(i * 0.015) - 0.02, x: -(i * 0.02), duration: 0.4, ease: "power1.out" },
-        1.2 + i * 0.35 + 0.8
-      );
-    });
+    return () => animation.revert();
   }, [isFlipping, onComplete]);
 
-  return <div ref={containerRef} className="w-full h-full cursor-pointer" style={{ touchAction: "none" }} />;
+  return (
+    <div
+      ref={containerRef}
+      className="w-full h-full cursor-pointer"
+      style={{ touchAction: "none" }}
+    />
+  );
 }

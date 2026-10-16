@@ -3,6 +3,7 @@
 export type UserRole = "student" | "parent";
 export type ExamSlug = "jamb" | "waec" | "neco" | "post-utme";
 export type OptionLabel = "A" | "B" | "C" | "D";
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export interface QuestionOption {
   label: OptionLabel;
@@ -37,6 +38,7 @@ export interface Database {
           created_at?: string;
           linked_student_id?: string | null;
         };
+        Relationships: [];
       };
       exams: {
         Row: {
@@ -60,6 +62,7 @@ export interface Database {
           price_kobo?: number;
           is_active?: boolean;
         };
+        Relationships: [];
       };
       questions: {
         Row: {
@@ -92,6 +95,7 @@ export interface Database {
           correct_option?: OptionLabel;
           explanation?: string;
         };
+        Relationships: [];
       };
       user_exam_access: {
         Row: {
@@ -115,6 +119,7 @@ export interface Database {
           payment_ref?: string;
           unlocked_at?: string;
         };
+        Relationships: [];
       };
       mock_attempts: {
         Row: {
@@ -122,6 +127,10 @@ export interface Database {
           user_id: string;
           exam_id: string;
           subjects: string[];
+          question_ids: string[];
+          expires_at: string | null;
+          answer_revision: number;
+          review_snapshot: Json | null;
           answers: Record<string, OptionLabel>;
           score: number;
           started_at: string;
@@ -136,6 +145,10 @@ export interface Database {
           score: number;
           started_at?: string;
           completed_at?: string | null;
+          question_ids?: string[];
+          expires_at?: string | null;
+          answer_revision?: number;
+          review_snapshot?: Json | null;
         };
         Update: {
           id?: string;
@@ -146,8 +159,17 @@ export interface Database {
           score?: number;
           started_at?: string;
           completed_at?: string | null;
+          question_ids?: string[];
+          expires_at?: string | null;
+          answer_revision?: number;
+          review_snapshot?: Json | null;
         };
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }

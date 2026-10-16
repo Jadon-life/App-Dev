@@ -1,106 +1,107 @@
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors, Spacing, FontSize, BorderRadius } from "@/src/constants/theme";
-
-const examsList = [
-  { slug: "jamb", name: "UTME", description: "Unified Tertiary Matriculation Examination", price: "₦3,500" },
-  { slug: "waec", name: "WAEC", description: "West African Senior School Certificate", price: "₦3,500" },
-];
-
+import { RefreshControl, Text, View } from "react-native";
+import { useExams, useAccess } from "../../src/lib/study-data";
+import { openWeb } from "../../src/lib/web-link";
+import { Button, Heading, Notice, Screen, ui } from "../../src/components/ui";
+import { Colors } from "../../src/constants/theme";
 export default function ExamsScreen() {
+  const exams = useExams();
+  const access = useAccess();
+  const refresh = () => {
+    void exams.refetch();
+    void access.refetch();
+  };
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Exams</Text>
-          <Text style={styles.subtitle}>Choose an exam to start preparing</Text>
+    <Screen
+      refreshControl={
+        <RefreshControl
+          refreshing={exams.isRefetching || access.isRefetching}
+          onRefresh={refresh}
+          tintColor={Colors.secondary}
+        />
+      }
+    >
+      <Heading
+        eyebrow="Your next milestone"
+        title="Find your focus."
+        description="Choose an exam. Practice and secure payments open on the CrysLearn website."
+      />
+      {exams.isPending ? (
+        <Text accessibilityLiveRegion="polite" style={ui.body}>
+          Loading exams…
+        </Text>
+      ) : exams.isError ? (
+        <>
+          <Notice
+            error
+            message="We couldn't load the exam catalogue. Check your connection and try again."
+          />
+          <Button title="Try again" onPress={refresh} />
+        </>
+      ) : !exams.data?.length ? (
+        <View style={ui.notice}>
+          <Text style={ui.heading}>The catalogue is being prepared.</Text>
+          <Text style={ui.body}>No active exams are available yet. Pull down to check again.</Text>
         </View>
-
-        <View style={styles.list}>
-          {examsList.map((exam) => (
-            <TouchableOpacity key={exam.slug} style={styles.card}>
-              <View style={styles.cardContent}>
-                <Text style={styles.examName}>{exam.name}</Text>
-                <Text style={styles.examDescription}>{exam.description}</Text>
-                <View style={styles.cardFooter}>
-                  <Text style={styles.price}>{exam.price}</Text>
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>Locked</Text>
-                  </View>
-                </View>
+      ) : (
+        exams.data.map((exam) => {
+          const unlocked = access.data?.includes(exam.id);
+          return (
+            <View key={exam.id} style={ui.card}>
+              <View style={ui.row}>
+                <Text accessibilityRole="header" style={[ui.heading, { flex: 1 }]}>
+                  {exam.name}
+                </Text>
+                <Text
+                  style={[ui.small, { color: unlocked ? Colors.secondary : Colors.text.muted }]}
+                >
+                  {access.isPending
+                    ? "Checking access…"
+                    : access.isError
+                      ? "Access unavailable"
+                      : unlocked
+                        ? "Unlocked"
+                        : "Not unlocked"}
+                </Text>
               </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+              {!unlocked && (
+                <Text style={ui.body}>
+                  {new Intl.NumberFormat("en-NG", {
+                    style: "currency",
+                    currency: "NGN",
+                    maximumFractionDigits: 0,
+                  }).format(exam.price_kobo / 100)}
+                </Text>
+              )}
+              <Button
+                title={
+                  unlocked
+                    ? "Practice on web"
+                    : access.isError
+                      ? "View exam on web"
+                      : "View access options"
+                }
+                secondary={!unlocked}
+                onPress={() => {
+                  void openWeb(
+                    unlocked
+                      ? `/exams/${encodeURIComponent(exam.slug)}/subjects`
+                      : `/pay/${encodeURIComponent(exam.slug)}`,
+                  );
+                }}
+              />
+            </View>
+          );
+        })
+      )}
+      {access.isError && (
+        <Notice
+          error
+          message="Your access status couldn't be checked. Your purchases are safe; pull down to retry."
+        />
+      )}
+      <Text style={ui.small}>
+        A separate browser sign-in may be required. Your unlocked exams are tied to your account.
+      </Text>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.dark,
-  },
-  header: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
-  title: {
-    color: Colors.text.dark,
-    fontSize: FontSize.xxl,
-    fontWeight: "700",
-  },
-  subtitle: {
-    color: Colors.text.dark + "99",
-    fontSize: FontSize.sm,
-    marginTop: Spacing.xs,
-  },
-  list: {
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.md,
-    paddingBottom: Spacing.xl,
-  },
-  card: {
-    backgroundColor: Colors.background.dark + "AA",
-    borderWidth: 1,
-    borderColor: Colors.border.dark,
-    borderRadius: BorderRadius.card,
-    padding: Spacing.lg,
-  },
-  cardContent: {
-    gap: Spacing.sm,
-  },
-  examName: {
-    color: Colors.text.dark,
-    fontSize: FontSize.lg,
-    fontWeight: "700",
-  },
-  examDescription: {
-    color: Colors.text.dark + "99",
-    fontSize: FontSize.sm,
-  },
-  cardFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: Spacing.sm,
-  },
-  price: {
-    color: Colors.secondary,
-    fontSize: FontSize.lg,
-    fontWeight: "700",
-  },
-  badge: {
-    backgroundColor: Colors.warning + "20",
-    borderRadius: BorderRadius.pill,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-  },
-  badgeText: {
-    color: Colors.warning,
-    fontSize: FontSize.xs,
-    fontWeight: "600",
-  },
-});

@@ -2,10 +2,10 @@
 
 /**
  * FloatingCrystal — 3D rotating crystal using raw Three.js (not R3F).
- * 
+ *
  * Uses imperative Three.js inside useEffect to avoid the React reconciler
  * conflict that crashes with @react-three/fiber + Next.js 14.
- * 
+ *
  * Features:
  * - Octahedron crystal with metallic purple material
  * - Wireframe inner glow
@@ -22,36 +22,45 @@ export default function FloatingCrystal() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const width = Math.max(container.clientWidth, 1);
+    const height = Math.max(container.clientHeight, 1);
 
     // ═══ SCENE SETUP ═══
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
     camera.position.z = 6;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    } catch {
+      // This decorative scene must never prevent use on devices without WebGL.
+      return;
+    }
+    renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.setClearColor(0x000000, 0); // Transparent background
-    containerRef.current.appendChild(renderer.domElement);
+    container.appendChild(renderer.domElement);
 
     // ═══ LIGHTING ═══
-    const ambientLight = new THREE.AmbientLight(0x7C3AED, 0.3);
+    const ambientLight = new THREE.AmbientLight(0x7c3aed, 0.3);
     scene.add(ambientLight);
-    const dirLight1 = new THREE.DirectionalLight(0x7C3AED, 1);
+    const dirLight1 = new THREE.DirectionalLight(0x7c3aed, 1);
     dirLight1.position.set(5, 5, 5);
     scene.add(dirLight1);
-    const dirLight2 = new THREE.DirectionalLight(0x3B82F6, 0.5);
+    const dirLight2 = new THREE.DirectionalLight(0x3b82f6, 0.5);
     dirLight2.position.set(-5, -5, 5);
     scene.add(dirLight2);
 
     // ═══ CRYSTAL (Octahedron) ═══
     const crystalGeometry = new THREE.OctahedronGeometry(1.2, 0);
     const crystalMaterial = new THREE.MeshStandardMaterial({
-      color: 0x7C3AED,
+      color: 0x7c3aed,
       metalness: 0.9,
       roughness: 0.1,
-      emissive: 0x4C1D95,
+      emissive: 0x4c1d95,
       emissiveIntensity: 0.2,
     });
     const crystal = new THREE.Mesh(crystalGeometry, crystalMaterial);
@@ -60,7 +69,7 @@ export default function FloatingCrystal() {
     // ═══ WIREFRAME INNER GLOW ═══
     const wireGeometry = new THREE.OctahedronGeometry(1.0, 0);
     const wireMaterial = new THREE.MeshBasicMaterial({
-      color: 0xA855F7,
+      color: 0xa855f7,
       wireframe: true,
       transparent: true,
       opacity: 0.3,
@@ -71,7 +80,7 @@ export default function FloatingCrystal() {
     // ═══ ORBIT RING ═══
     const ringGeometry = new THREE.TorusGeometry(2, 0.02, 16, 100);
     const ringMaterial = new THREE.MeshBasicMaterial({
-      color: 0x3B82F6,
+      color: 0x3b82f6,
       transparent: true,
       opacity: 0.4,
     });
@@ -82,7 +91,7 @@ export default function FloatingCrystal() {
     // Second ring
     const ring2Geometry = new THREE.TorusGeometry(2.5, 0.015, 16, 100);
     const ring2Material = new THREE.MeshBasicMaterial({
-      color: 0xA855F7,
+      color: 0xa855f7,
       transparent: true,
       opacity: 0.2,
     });
@@ -103,7 +112,7 @@ export default function FloatingCrystal() {
     particleGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     const particleMaterial = new THREE.PointsMaterial({
       size: 0.04,
-      color: 0xA855F7,
+      color: 0xa855f7,
       transparent: true,
       opacity: 0.5,
       sizeAttenuation: true,
@@ -112,11 +121,13 @@ export default function FloatingCrystal() {
     scene.add(particles);
 
     // ═══ ANIMATION LOOP ═══
-    let animationId: number;
+    let animationId = 0;
+    let disposed = false;
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const clock = new THREE.Clock();
 
     const animate = () => {
-      animationId = requestAnimationFrame(animate);
+      if (disposed || document.hidden || motion.matches) return;
       const elapsed = clock.getElapsedTime();
 
       // Crystal rotation
@@ -140,25 +151,39 @@ export default function FloatingCrystal() {
       particles.rotation.x = elapsed * 0.01;
 
       renderer.render(scene, camera);
+      animationId = requestAnimationFrame(animate);
     };
 
-    animate();
+    const updateAnimation = () => {
+      cancelAnimationFrame(animationId);
+      animationId = 0;
+      if (document.hidden) return;
+      if (motion.matches) renderer.render(scene, camera);
+      else animate();
+    };
+    motion.addEventListener("change", updateAnimation);
+    document.addEventListener("visibilitychange", updateAnimation);
+    updateAnimation();
 
     // ═══ RESIZE HANDLER ═══
     const handleResize = () => {
-      if (!containerRef.current) return;
-      const w = containerRef.current.clientWidth;
-      const h = containerRef.current.clientHeight;
+      const w = Math.max(container.clientWidth, 1);
+      const h = Math.max(container.clientHeight, 1);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      if (motion.matches && !document.hidden) renderer.render(scene, camera);
     };
-    window.addEventListener("resize", handleResize);
+    const resizeObserver = new ResizeObserver(handleResize);
+    resizeObserver.observe(container);
 
     // ═══ CLEANUP ═══
     return () => {
+      disposed = true;
       cancelAnimationFrame(animationId);
-      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
+      motion.removeEventListener("change", updateAnimation);
+      document.removeEventListener("visibilitychange", updateAnimation);
       crystalGeometry.dispose();
       crystalMaterial.dispose();
       wireGeometry.dispose();
@@ -170,16 +195,12 @@ export default function FloatingCrystal() {
       particleGeometry.dispose();
       particleMaterial.dispose();
       renderer.dispose();
-      if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
-        containerRef.current.removeChild(renderer.domElement);
-      }
+      renderer.forceContextLoss();
+      renderer.domElement.remove();
     };
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="absolute inset-0 pointer-events-none"
-    />
+    <div ref={containerRef} aria-hidden="true" className="absolute inset-0 pointer-events-none" />
   );
 }

@@ -22,15 +22,7 @@ CREATE INDEX idx_questions_exam_subject_year ON public.questions(exam_id, subjec
 -- Enable RLS
 ALTER TABLE public.questions ENABLE ROW LEVEL SECURITY;
 
--- RLS: Authenticated users with exam access can read questions
--- (Access is checked via user_exam_access table)
-CREATE POLICY "Users with exam access can view questions"
-  ON public.questions
-  FOR SELECT
-  USING (
-    exam_id IN (
-      SELECT exam_id FROM public.user_exam_access WHERE user_id = auth.uid()
-    )
-  );
+-- The access policy is created in migration 004, after user_exam_access exists.
+-- Creating it here made a clean database fail before the referenced table existed.
 
 -- Note: INSERT/UPDATE/DELETE only via service role (admin seeding questions)

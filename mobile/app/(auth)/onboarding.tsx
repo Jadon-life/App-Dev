@@ -1,141 +1,166 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors, Spacing, FontSize, BorderRadius } from "@/src/constants/theme";
-
-const examOptions = [
-  { slug: "jamb", name: "UTME", description: "UTME" },
-  { slug: "waec", name: "WAEC", description: "SSCE" },
-];
-
-const roles = [
-  { id: "student", label: "I am a Student", emoji: "🎓" },
-  { id: "parent", label: "I am a Parent", emoji: "👨‍👩‍👦" },
-];
-
+import { useEffect, useRef, useState } from "react";
+import { KeyboardAvoidingView, Platform, Text, TouchableOpacity, View } from "react-native";
+import { Redirect, router } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../../src/providers/AuthProvider";
+import { useProfile } from "../../src/lib/study-data";
+import { supabase } from "../../src/lib/supabase";
+import { editableProfile } from "../../src/lib/profile-access";
+import { Colors } from "../../src/constants/theme";
+import { Button, Field, Heading, Loading, Notice, Screen, ui } from "../../src/components/ui";
 export default function OnboardingScreen() {
+  const { session, loading } = useAuth();
+  const profile = useProfile();
+  const client = useQueryClient();
+  const [name, setName] = useState("");
+  const [role, setRole] = useState<"student" | "parent">("student");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const submitting = useRef(false);
+  useEffect(() => {
+    if (profile.data) {
+      setName(profile.data.name);
+      setRole(profile.data.role);
+    }
+  }, [profile.data]);
+  if (loading || (session && profile.isPending)) return <Loading />;
+  if (!session) return <Redirect href="/(auth)/login" />;
+  async function save() {
+    if (!supabase || !session || submitting.current) return;
+    if (!name.trim() || name.trim().length > 100) {
+      setError("Enter a name between 1 and 100 characters.");
+      return;
+    }
+    submitting.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      if (!profile.data)
+        throw new Error(
+          "Your account profile is unavailable. Please sign out and contact support before trying again.",
+        );
+      const { error: saveError } = await supabase
+        .from("users")
+        .update(editableProfile(name, role))
+        .eq("id", session.user.id)
+        .select("id")
+        .single();
+      if (saveError) throw saveError;
+      await client.invalidateQueries({ queryKey: ["profile", session.user.id] });
+      router.replace("/(tabs)");
+    } catch (failure) {
+      setError(
+        failure instanceof Error
+          ? failure.message
+          : "Your profile couldn't be saved. Check your connection and try again.",
+      );
+    } finally {
+      submitting.current = false;
+      setBusy(false);
+    }
+  }
+  async function signOut() {
+    if (!supabase || submitting.current) return;
+    submitting.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
+      if (signOutError) throw signOutError;
+    } catch {
+      setError("We couldn't sign out. Check your connection and try again.");
+    } finally {
+      submitting.current = false;
+      setBusy(false);
+    }
+  }
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Let's set you up</Text>
-        <Text style={styles.subtitle}>
-          Tell us about yourself so we can personalise your experience.
-        </Text>
-
-        {/* Role Selection */}
-        <Text style={styles.sectionTitle}>I am a...</Text>
-        <View style={styles.roleGrid}>
-          {roles.map((role) => (
-            <TouchableOpacity key={role.id} style={styles.roleCard}>
-              <Text style={styles.roleEmoji}>{role.emoji}</Text>
-              <Text style={styles.roleLabel}>{role.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Exam Selection */}
-        <Text style={styles.sectionTitle}>Which exam(s) are you preparing for?</Text>
-        <View style={styles.examGrid}>
-          {examOptions.map((exam) => (
-            <TouchableOpacity key={exam.slug} style={styles.examCard}>
-              <Text style={styles.examName}>{exam.name}</Text>
-              <Text style={styles.examDesc}>{exam.description}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Continue */}
-        <TouchableOpacity style={styles.continueBtn}>
-          <Text style={styles.continueBtnText}>Continue</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <Screen>
+        <Heading
+          eyebrow="A good place to begin"
+          title="Make this space yours."
+          description="Tell us what to call you and how you'll use CrysLearn."
+        />
+        {profile.isError ? (
+          <>
+            <Notice
+              error
+              message="We couldn't load your profile. Try again before making changes."
+            />
+            <Button
+              title="Try again"
+              onPress={() => {
+                void profile.refetch();
+              }}
+            />
+          </>
+        ) : (
+          <>
+            <Field
+              label="Your name"
+              value={name}
+              onChangeText={setName}
+              maxLength={100}
+              autoComplete="name"
+              editable={!busy}
+            />
+            <Text style={ui.label}>I'm here as a</Text>
+            <View style={{ gap: 12 }}>
+              {(
+                [
+                  { id: "student", title: "Student", detail: "Prepare for your next exam." },
+                  {
+                    id: "parent",
+                    title: "Parent",
+                    detail: "Support a learner. Sharing is not available yet.",
+                  },
+                ] as const
+              ).map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: role === item.id, disabled: busy }}
+                  disabled={busy}
+                  onPress={() => setRole(item.id)}
+                  style={[
+                    ui.card,
+                    {
+                      borderWidth: 1,
+                      borderColor: role === item.id ? Colors.secondary : Colors.border.dark,
+                    },
+                  ]}
+                >
+                  <Text style={ui.heading}>
+                    {item.title}
+                    {role === item.id ? "  ✓" : ""}
+                  </Text>
+                  <Text style={ui.body}>{item.detail}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Button
+              title="Open my study desk"
+              busy={busy}
+              onPress={() => {
+                void save();
+              }}
+            />
+          </>
+        )}
+        {error && <Notice error message={error} />}
+        <Button
+          title="Sign out"
+          secondary
+          disabled={busy}
+          onPress={() => {
+            void signOut();
+          }}
+        />
+      </Screen>
+    </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.dark,
-  },
-  content: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxl,
-    paddingBottom: Spacing.xxl,
-  },
-  title: {
-    color: Colors.text.dark,
-    fontSize: FontSize.xxl,
-    fontWeight: "700",
-  },
-  subtitle: {
-    color: Colors.text.dark + "99",
-    fontSize: FontSize.md,
-    marginTop: Spacing.sm,
-    lineHeight: 22,
-  },
-  sectionTitle: {
-    color: Colors.text.dark,
-    fontSize: FontSize.md,
-    fontWeight: "600",
-    marginTop: Spacing.xl,
-    marginBottom: Spacing.md,
-  },
-  roleGrid: {
-    flexDirection: "row",
-    gap: Spacing.md,
-  },
-  roleCard: {
-    flex: 1,
-    backgroundColor: Colors.border.dark + "40",
-    borderWidth: 1,
-    borderColor: Colors.border.dark,
-    borderRadius: BorderRadius.card,
-    padding: Spacing.lg,
-    alignItems: "center",
-    gap: Spacing.sm,
-    minHeight: 44,
-  },
-  roleEmoji: {
-    fontSize: 28,
-  },
-  roleLabel: {
-    color: Colors.text.dark,
-    fontSize: FontSize.sm,
-    fontWeight: "500",
-  },
-  examGrid: {
-    gap: Spacing.md,
-  },
-  examCard: {
-    backgroundColor: Colors.border.dark + "40",
-    borderWidth: 1,
-    borderColor: Colors.border.dark,
-    borderRadius: BorderRadius.card,
-    padding: Spacing.lg,
-    minHeight: 44,
-  },
-  examName: {
-    color: Colors.text.dark,
-    fontSize: FontSize.lg,
-    fontWeight: "600",
-  },
-  examDesc: {
-    color: Colors.text.dark + "99",
-    fontSize: FontSize.sm,
-    marginTop: Spacing.xs,
-  },
-  continueBtn: {
-    backgroundColor: Colors.secondary,
-    borderRadius: BorderRadius.btn,
-    paddingVertical: Spacing.md,
-    alignItems: "center",
-    marginTop: Spacing.xxl,
-    minHeight: 44,
-    justifyContent: "center",
-  },
-  continueBtnText: {
-    color: "#FFFFFF",
-    fontSize: FontSize.md,
-    fontWeight: "600",
-  },
-});

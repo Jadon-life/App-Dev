@@ -38,3 +38,14 @@ CREATE POLICY "Parents can view linked student exam access"
       SELECT linked_student_id FROM public.users WHERE id = auth.uid() AND role = 'parent'
     )
   );
+
+-- The question policy depends on this table. Existing databases already applied
+-- the policy; this placement fixes ordered bootstrap of a fresh database.
+CREATE POLICY "Users with exam access can view questions"
+  ON public.questions
+  FOR SELECT
+  USING (
+    exam_id IN (
+      SELECT exam_id FROM public.user_exam_access WHERE user_id = auth.uid()
+    )
+  );

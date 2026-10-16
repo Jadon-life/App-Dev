@@ -1,125 +1,122 @@
 "use client";
-
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { EXAMS } from "@shared/constants/exams";
-import { CheckCircle2, Clock, BookOpen, ArrowRight } from "lucide-react";
-import type { ExamSlug } from "@/types/database";
+import { Check, ArrowRight, Clock, BookOpen } from "lucide-react";
+import { getExam } from "@/lib/exam";
+import { useAuth } from "@/hooks/useAuth";
+import { ExamLoading, ExamMessage } from "../../_components/ExamState";
 
 export default function SubjectsPage() {
   const params = useParams();
   const router = useRouter();
-  const examSlug = params.exam as ExamSlug;
-  const exam = EXAMS[examSlug];
-
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
-
-  if (!exam) {
+  const exam = getExam(params.exam);
+  const { user, loading } = useAuth();
+  const [selected, setSelected] = useState<string[]>([]);
+  if (!exam)
+    return <ExamMessage title="Exam not found">Choose an available exam to continue.</ExamMessage>;
+  if (loading) return <ExamLoading />;
+  if (!user)
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Exam not found.</p>
-      </div>
+      <ExamMessage title="Make this practice yours" signIn>
+        Sign in to save your answers and see your progress after each mock.
+      </ExamMessage>
     );
-  }
-
-  const toggleSubject = (subject: string) => {
-    setSelectedSubjects((prev) =>
-      prev.includes(subject)
-        ? prev.filter((s) => s !== subject)
-        : [...prev, subject]
-    );
-  };
-
-  const selectAll = () => {
-    setSelectedSubjects(exam.subjects);
-  };
-
-  const startMock = () => {
-    if (selectedSubjects.length === 0) return;
-    const subjectsParam = encodeURIComponent(JSON.stringify(selectedSubjects));
-    router.push(`/exams/${examSlug}/mock?subjects=${subjectsParam}`);
-  };
-
+  const chosen = selected.filter((subject) => exam.subjects.includes(subject));
   return (
-    <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-primary">{exam.name}</h1>
-          <p className="text-gray-500 text-sm mt-1">{exam.fullName}</p>
-        </div>
+    <div className="mx-auto max-w-4xl">
+      <header className="mb-8">
         <Link
-          href={`/exams/${examSlug}/history`}
-          className="btn-secondary text-sm flex items-center gap-2"
+          href="/exams"
+          className="mb-5 inline-block text-sm text-text-muted hover:underline dark:text-text-dark-muted"
         >
-          <BookOpen className="w-4 h-4" />
-          Past Questions
+          ← All exams
         </Link>
-      </div>
-
-      {/* Mock Exam Setup */}
-      <div className="card mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Clock className="w-5 h-5 text-secondary" />
-          <div>
-            <h2 className="font-semibold text-text-light">Take Mock Exam</h2>
-            <p className="text-sm text-gray-500">
-              {exam.mockQuestionCount} questions &middot;{" "}
-              {exam.mockDurationMinutes} minutes &middot; Auto-submit on timeout
-            </p>
-          </div>
-        </div>
-
-        <p className="text-sm text-gray-600 mb-4">
-          Select the subjects you want to include in your mock exam:
+        <p className="page-kicker">{exam.name} / mock setup</p>
+        <h1 className="page-title">What are we practising?</h1>
+        <p className="page-intro">
+          Choose your subjects. We’ll bring together a balanced mix of available questions for your
+          session.
         </p>
-
-        {/* Select All */}
-        <button
-          onClick={selectAll}
-          className="text-sm text-secondary hover:underline mb-3"
-        >
-          Select all ({exam.subjects.length} subjects)
-        </button>
-
-        {/* Subject Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-6">
-          {exam.subjects.map((subject) => {
-            const selected = selectedSubjects.includes(subject);
-            return (
-              <button
-                key={subject}
-                onClick={() => toggleSubject(subject)}
-                className={`px-3 py-2.5 rounded-btn text-sm font-medium text-left transition-all border ${
-                  selected
-                    ? "border-secondary bg-secondary/10 text-secondary"
-                    : "border-gray-200 text-gray-600 hover:border-gray-300"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  {selected && <CheckCircle2 className="w-4 h-4 flex-shrink-0" />}
-                  {subject}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Start Button */}
-        <button
-          onClick={startMock}
-          disabled={selectedSubjects.length === 0}
-          className="btn-primary w-full sm:w-auto flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Start Mock Exam
-          <ArrowRight className="w-4 h-4" />
-        </button>
-        {selectedSubjects.length > 0 && (
-          <p className="text-xs text-gray-400 mt-2">
-            {selectedSubjects.length} subject(s) selected
-          </p>
-        )}
+      </header>
+      <div className="grid gap-6 lg:grid-cols-[1fr_240px]">
+        <section className="dash-card">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-semibold">Your subjects</h2>
+            <button
+              onClick={() =>
+                setSelected(chosen.length === exam.subjects.length ? [] : [...exam.subjects])
+              }
+              className="min-h-11 text-sm font-medium text-brand-teal hover:underline dark:text-brand-aqua"
+            >
+              {chosen.length === exam.subjects.length ? "Clear selection" : "Select all"}
+            </button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {exam.subjects.map((subject) => {
+              const active = chosen.includes(subject);
+              return (
+                <label
+                  key={subject}
+                  className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm transition-colors ${active ? "border-brand-teal bg-brand-teal/5 dark:border-brand-aqua dark:bg-brand-aqua/5" : "border-current/15 hover:bg-current/5"}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={active}
+                    onChange={() =>
+                      setSelected((previous) =>
+                        previous.includes(subject)
+                          ? previous.filter((item) => item !== subject)
+                          : [...previous, subject],
+                      )
+                    }
+                    className="h-4 w-4 accent-teal-700"
+                  />
+                  <span className="flex-1">{subject}</span>
+                  {active && (
+                    <Check
+                      aria-hidden="true"
+                      className="h-4 w-4 text-brand-teal dark:text-brand-aqua"
+                    />
+                  )}
+                </label>
+              );
+            })}
+          </div>
+        </section>
+        <aside className="space-y-5">
+          <div className="dash-card !p-5">
+            <Clock
+              aria-hidden="true"
+              className="mb-4 h-5 w-5 text-brand-teal dark:text-brand-aqua"
+            />
+            <h2 className="font-semibold">A focused session</h2>
+            <p className="mt-2 text-sm leading-relaxed text-text-muted dark:text-text-dark-muted">
+              {exam.mockDurationMinutes} minutes · Up to {exam.mockQuestionCount} questions. Your
+              timer starts when the questions are ready and keeps running if you leave the page.
+            </p>
+            <p aria-live="polite" className="mt-5 text-sm font-medium">
+              {chosen.length} {chosen.length === 1 ? "subject" : "subjects"} selected
+            </p>
+            <button
+              disabled={!chosen.length}
+              onClick={() => {
+                const query = new URLSearchParams({ subjects: JSON.stringify(chosen) });
+                router.push(`/exams/${exam.slug}/mock?${query}`);
+              }}
+              className="btn-primary mt-3 flex w-full items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Start mock <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </div>
+          <Link
+            href={`/exams/${exam.slug}/history`}
+            className="flex min-h-11 items-center gap-2 text-sm text-brand-teal hover:underline dark:text-brand-aqua"
+          >
+            <BookOpen aria-hidden="true" className="h-4 w-4" />
+            Prefer to study without a timer?
+          </Link>
+        </aside>
       </div>
     </div>
   );

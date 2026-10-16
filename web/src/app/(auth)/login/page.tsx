@@ -1,193 +1,305 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { authErrorMessage, safeAuthRedirect } from "@/lib/auth-routing";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  Check,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  User,
+} from "lucide-react";
+
+const callbackErrors: Record<string, string> = {
+  auth_callback_failed: "We couldn't complete sign-in. Please try again from this page.",
+  auth_unavailable: "Sign-in is temporarily unavailable. Please try again in a moment.",
+  session_expired: "Your session has expired. Sign in again to continue.",
+  configuration: "Sign-in is not configured yet. Please try again once the service is available.",
+};
 
 function LoginForm() {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const searchParams = useSearchParams();
+  const [isSignUp, setIsSignUp] = useState(searchParams.get("mode") === "signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(callbackErrors[searchParams.get("error") || ""] || "");
+  const [loading, setLoading] = useState<"email" | "google" | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const { signInWithEmail, signUpWithEmail, signInWithGoogle, error: sessionError } = useAuth();
+  const redirectTo = safeAuthRedirect(searchParams.get("redirect"));
 
-  const { signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/dashboard";
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (loading) return;
     setError("");
     setSuccessMessage("");
-    setLoading(true);
-
+    setLoading("email");
     try {
       if (isSignUp) {
-        if (!name.trim()) {
-          setError("Please enter your name");
-          setLoading(false);
+        if (!name.trim()) throw new Error("Please enter your name.");
+        const data = await signUpWithEmail(email, password, name);
+        if (data.session) {
+          window.location.assign("/onboarding");
           return;
         }
-        await signUpWithEmail(email, password, name);
         setSuccessMessage(
-          "Account created! Check your email to confirm, then log in."
+          "Check your email for a confirmation link. Once confirmed, you can sign in here.",
         );
       } else {
-        await signInWithEmail(email, password);
-        // Use window.location for full reload — ensures middleware reads the new session cookie
-        window.location.href = redirectTo;
+        const { user } = await signInWithEmail(email, password);
+        // A navigation reads the freshly written auth cookies in middleware.
+        if (!user?.user_metadata?.onboarding_completed) {
+          window.location.assign(`/onboarding?next=${encodeURIComponent(redirectTo)}`);
+          return;
+        }
+        const { data: profile, error: profileError } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+        if (profileError)
+          throw new Error(
+            "You're signed in, but your profile couldn't be loaded. Please try again.",
+          );
+        window.location.assign(
+          redirectTo === "/dashboard" && profile.role === "parent" ? "/parent" : redirectTo,
+        );
       }
-    } catch (err: any) {
-      setError(err.message || "Something went wrong. Please try again.");
+    } catch (failure: unknown) {
+      setError(authErrorMessage(failure, "We couldn't sign you in. Please try again."));
     } finally {
-      setLoading(false);
+      setLoading(null);
     }
   };
 
   const handleGoogleSignIn = async () => {
+    if (loading) return;
     setError("");
+    setSuccessMessage("");
+    setLoading("google");
     try {
-      await signInWithGoogle();
-    } catch (err: any) {
-      setError(err.message || "Google sign-in failed. Please try again.");
+      await signInWithGoogle(redirectTo);
+    } catch (failure: unknown) {
+      setError(authErrorMessage(failure, "Google sign-in failed. Please try again."));
+      setLoading(null);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-brand-teal to-brand-purple rounded-btn flex items-center justify-center shadow-glow">
-              <span className="text-white font-bold text-lg">C</span>
-            </div>
-            <span className="font-bold text-2xl text-text-primary dark:text-text-dark-primary">CrysLearn</span>
-          </Link>
-          <p className="mt-3 text-text-muted dark:text-text-dark-muted text-sm">
-            {isSignUp
-              ? "Create your account to start preparing"
-              : "Welcome back! Log in to continue preparing"}
-          </p>
-        </div>
+  const displayedError = error || sessionError;
 
-        {/* Form Card */}
-        <div className="dash-card">
-          {/* Error / Success Messages */}
-          {error && (
-            <div className="mb-4 p-3 bg-danger/10 border border-danger/20 rounded-btn text-danger text-sm">
-              {error}
+  return (
+    <main className="min-h-screen bg-background-light text-text-primary dark:bg-background-dark dark:text-text-dark-primary lg:grid lg:grid-cols-[1fr_1.05fr]">
+      <aside className="relative hidden overflow-hidden bg-brand-navy px-12 py-10 text-white lg:flex lg:flex-col xl:px-20">
+        <Link
+          href="/"
+          className="inline-flex w-fit items-center gap-2.5 text-xl font-bold tracking-tight"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/25 text-brand-aqua">
+            C
+          </span>
+          CrysLearn
+        </Link>
+        <div className="my-auto py-20">
+          <span className="mb-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-brand-aqua">
+            <BookOpen size={15} aria-hidden="true" /> Your next chapter
+          </span>
+          <h1 className="max-w-md font-heading text-6xl font-bold leading-[1.05] tracking-tight">
+            A clear head.
+            <br />
+            <span className="text-brand-aqua">A stronger score.</span>
+          </h1>
+          <p className="mt-6 max-w-sm text-base leading-7 text-white/70">
+            A place to practise, understand what needs work, and build confidence for exam day.
+          </p>
+          <ol className="mt-12 max-w-sm space-y-5 border-t border-white/15 pt-7">
+            {[
+              "Choose the exam you're working towards",
+              "Practise with past questions and timed mocks",
+              "See your results. Know your next step.",
+            ].map((step, index) => (
+              <li key={step} className="flex items-start gap-4 text-sm leading-6 text-white/80">
+                <span className="font-mono text-xs leading-6 text-brand-aqua">0{index + 1}</span>
+                {step}
+              </li>
+            ))}
+          </ol>
+        </div>
+        <p className="text-xs tracking-wide text-white/45">Built for the way you learn.</p>
+      </aside>
+
+      <section className="flex min-h-screen flex-col px-5 py-7 sm:px-10">
+        <Link
+          href="/"
+          className="inline-flex min-h-11 w-fit items-center gap-2 text-sm text-text-muted hover:text-brand-teal dark:text-text-dark-muted"
+        >
+          <ArrowLeft size={16} aria-hidden="true" /> Back to CrysLearn
+        </Link>
+        <div className="mx-auto my-auto w-full max-w-md py-12">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-brand-teal dark:text-brand-aqua">
+            {isSignUp ? "Start with one small step" : "Good to see you again"}
+          </p>
+          <h2 className="font-heading text-4xl font-bold tracking-tight">
+            {isSignUp ? "Make room for progress." : "Back to your preparation."}
+          </h2>
+          <p className="mb-8 mt-3 text-sm leading-6 text-text-muted dark:text-text-dark-muted">
+            {isSignUp
+              ? "Create an account to keep your practice and results in one place."
+              : "Sign in to pick up where you left off."}
+          </p>
+
+          {displayedError && (
+            <div
+              id="auth-error"
+              role="alert"
+              className="mb-5 rounded-btn border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+            >
+              {displayedError}
             </div>
           )}
           {successMessage && (
-            <div className="mb-4 p-3 bg-success/10 border border-success/20 rounded-btn text-success text-sm">
+            <div
+              role="status"
+              className="mb-5 flex gap-2 rounded-btn border border-success/25 bg-success/10 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-300"
+            >
+              <Check size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
               {successMessage}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name (sign up only) */}
-            {isSignUp && (
+          <form
+            onSubmit={handleSubmit}
+            aria-describedby={displayedError ? "auth-error" : undefined}
+            aria-busy={loading === "email"}
+          >
+            <fieldset disabled={loading !== null} className="space-y-5 disabled:opacity-75">
+              <legend className="sr-only">
+                {isSignUp ? "Create your account" : "Sign in with email"}
+              </legend>
+              {isSignUp && (
+                <div>
+                  <label htmlFor="auth-name" className="mb-2 block text-sm font-medium">
+                    Full name
+                  </label>
+                  <div className="relative">
+                    <User
+                      className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted"
+                      aria-hidden="true"
+                    />
+                    <input
+                      id="auth-name"
+                      name="name"
+                      type="text"
+                      autoComplete="name"
+                      maxLength={100}
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      className="input-field pl-10"
+                      placeholder="Your name"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
               <div>
-                <label className="block text-sm font-medium text-text-primary dark:text-text-dark-primary mb-1">
-                  Full Name
+                <label htmlFor="auth-email" className="mb-2 block text-sm font-medium">
+                  Email address
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail
+                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted"
+                    aria-hidden="true"
+                  />
                   <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    id="auth-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
                     className="input-field pl-10"
-                    placeholder="Enter your full name"
-                    required={isSignUp}
+                    placeholder="you@example.com"
+                    required
                   />
                 </div>
               </div>
-            )}
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-text-primary dark:text-text-dark-primary mb-1">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input-field pl-10"
-                  placeholder="you@example.com"
-                  required
-                />
+              <div>
+                <label htmlFor="auth-password" className="mb-2 block text-sm font-medium">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock
+                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted"
+                    aria-hidden="true"
+                  />
+                  <input
+                    id="auth-password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete={isSignUp ? "new-password" : "current-password"}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    className="input-field pl-10 pr-12"
+                    minLength={isSignUp ? 8 : undefined}
+                    aria-describedby={isSignUp ? "password-hint" : undefined}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
+                    className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-text-muted hover:text-brand-teal"
+                  >
+                    {showPassword ? (
+                      <EyeOff size={18} aria-hidden="true" />
+                    ) : (
+                      <Eye size={18} aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
+                {isSignUp && (
+                  <p
+                    id="password-hint"
+                    className="mt-2 text-xs text-text-muted dark:text-text-dark-muted"
+                  >
+                    Use at least 8 characters.
+                  </p>
+                )}
               </div>
-            </div>
-
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-medium text-text-primary dark:text-text-dark-primary mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input-field pl-10 pr-10"
-                  placeholder="Minimum 8 characters"
-                  minLength={8}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading
-                ? "Please wait..."
-                : isSignUp
-                ? "Create Account"
-                : "Log In"}
-            </button>
+              <button
+                type="submit"
+                className="btn-primary flex w-full items-center justify-center gap-2 disabled:cursor-wait"
+              >
+                {loading === "email" ? "Please wait…" : isSignUp ? "Create account" : "Sign in"}
+                <ArrowRight size={17} aria-hidden="true" />
+              </button>
+            </fieldset>
           </form>
 
-          {/* Divider */}
-          <div className="flex items-center my-6">
-            <div className="flex-1 h-px bg-brand-teal/10 dark:bg-brand-frost/10" />
-            <span className="px-3 text-sm text-text-muted dark:text-text-dark-muted">or</span>
-            <div className="flex-1 h-px bg-brand-teal/10 dark:bg-brand-frost/10" />
+          <div className="my-6 flex items-center gap-4" aria-hidden="true">
+            <span className="h-px flex-1 bg-brand-teal/15 dark:bg-white/10" />
+            <span className="text-xs text-text-muted dark:text-text-dark-muted">or</span>
+            <span className="h-px flex-1 bg-brand-teal/15 dark:bg-white/10" />
           </div>
-
-          {/* Google OAuth */}
           <button
+            type="button"
             onClick={handleGoogleSignIn}
-            className="w-full flex items-center justify-center gap-3 border border-brand-teal/20 dark:border-brand-frost/10 rounded-btn px-4 py-3 min-h-touch
-                       hover:bg-brand-surf/5 transition-colors text-sm font-medium text-text-primary dark:text-text-dark-primary"
+            disabled={loading !== null}
+            className="flex min-h-12 w-full items-center justify-center gap-3 rounded-btn border border-brand-teal/20 px-4 py-3 text-sm font-medium transition-colors hover:bg-brand-teal/5 disabled:cursor-wait disabled:opacity-60 dark:border-white/15 dark:hover:bg-white/5"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 fill="#4285F4"
@@ -205,33 +317,44 @@ function LoginForm() {
                 fill="#EA4335"
               />
             </svg>
-            Continue with Google
+            {loading === "google" ? "Opening Google…" : "Continue with Google"}
           </button>
-
-          {/* Toggle sign up / sign in */}
-          <p className="mt-6 text-center text-sm text-text-muted dark:text-text-dark-muted">
-            {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+          <p className="mt-7 text-center text-sm text-text-muted dark:text-text-dark-muted">
+            {isSignUp ? "Already have an account?" : "New to CrysLearn?"}{" "}
             <button
+              type="button"
+              disabled={loading !== null}
               onClick={() => {
                 setIsSignUp(!isSignUp);
                 setError("");
                 setSuccessMessage("");
               }}
-              className="text-brand-surf font-semibold hover:underline"
+              className="min-h-11 font-semibold text-brand-teal underline-offset-4 hover:underline dark:text-brand-aqua"
             >
-              {isSignUp ? "Log in" : "Sign up"}
+              {isSignUp ? "Sign in" : "Create an account"}
             </button>
           </p>
         </div>
-      </div>
-    </div>
+        <p className="text-center text-xs text-text-muted dark:text-text-dark-muted">
+          Your preparation, one question at a time.
+        </p>
+      </section>
+    </main>
   );
 }
 
-
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-background-light" />}>
+    <Suspense
+      fallback={
+        <main
+          className="flex min-h-screen items-center justify-center bg-background-light dark:bg-background-dark"
+          aria-busy="true"
+        >
+          <p role="status">Loading sign-in…</p>
+        </main>
+      }
+    >
       <LoginForm />
     </Suspense>
   );

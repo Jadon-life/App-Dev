@@ -44,3 +44,13 @@ coverage/
 
 # Supabase
 supabase/.temp/
+
+# Browser regression outputs
+/test-results/
+/playwright-report/
+/web/test-results/
+/web/playwright-report/
+
+# Python release tooling
+__pycache__/
+*.pyc

@@ -6,19 +6,21 @@ CrysLearn is a mobile-first exam preparation platform for Nigerian students prep
 
 ## Features
 
-- 10+ years of past questions (filterable by subject and year)
+- Past-question library with subject and available-year filters
 - Timed mock exams with automatic scoring
-- AI-powered answer explanations
+- Answer review with the explanations stored in the question bank
 - Subject-by-subject performance tracking
 - One-time exam unlock payment (Paystack)
-- Offline mode (mobile app)
-- Parent dashboard to monitor child's progress
+- Weekly study planner with account-scoped local persistence
+- Mobile account, exam catalog and synced result summaries
+
+Crystal AI, offline question downloads and consent-based parent sharing are not yet available. Their screens state this explicitly.
 
 ## Project Structure
 
 ```
 CrysLearn/
-├── web/            → Next.js 14 web app (deployed to Vercel)
+├── web/            → Next.js 15 web app (deployed to Vercel)
 ├── mobile/         → React Native (Expo) app (Android + iOS)
 ├── shared/         → Shared types, constants, and validations
 ├── supabase/       → Database migrations and seed data
@@ -31,7 +33,7 @@ CrysLearn/
 ### 1. Set up the database
 
 1. Create a Supabase project at [supabase.com](https://supabase.com)
-2. Run migration files in `supabase/migrations/` (in order, 001-006)
+2. Review and run migrations in `supabase/migrations/` (in filename order, 00001–00009). Migrations 00008 and 00009 are required for the hardened profile and exam APIs. See the coordinated rollout notes in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 3. Run seed files in `supabase/seed/` to populate exam data
 
 ### 2. Configure environment
@@ -44,9 +46,8 @@ cp web/.env.example web/.env.local
 ### 3. Run the web app
 
 ```bash
-cd web
-npm install
-npm run dev
+npm ci
+npm run dev:web
 ```
 
 Visit http://localhost:3000
@@ -54,9 +55,8 @@ Visit http://localhost:3000
 ### 4. Run the mobile app
 
 ```bash
-cd mobile
-npm install
-npx expo start
+npm ci
+npm run start --workspace=cryslearn-mobile
 ```
 
 ### 5. Deploy
@@ -66,17 +66,19 @@ npx expo start
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend (Web) | Next.js 14, TypeScript, Tailwind CSS |
-| Mobile | React Native (Expo) |
-| Backend | Supabase (PostgreSQL + Auth + Edge Functions) |
-| Payments | Paystack |
-| Hosting | Vercel (web), Expo EAS (mobile) |
+| Layer          | Technology                                    |
+| -------------- | --------------------------------------------- |
+| Frontend (Web) | Next.js 15, TypeScript, Tailwind CSS          |
+| Mobile         | React Native (Expo)                           |
+| Backend        | Supabase (PostgreSQL + Auth + Edge Functions) |
+| Payments       | Paystack                                      |
+| Hosting        | Vercel (web), Expo EAS (mobile)               |
 
 ## Environment Variables
 
-See `web/.env.example` and `mobile/.env.example` for required variables.
+See `web/.env.example` and `mobile/.env.example` for required variables. Keep values in secure environment settings or ignored local files.
+
+For regression tests, browser fixtures, database checks, and deployment limits, read [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## License
 

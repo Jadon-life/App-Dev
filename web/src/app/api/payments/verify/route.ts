@@ -1,50 +1,53 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { createServerSupabase } from "@/lib/supabase-server";
+import { grantExamAccess, verifyPaystackPayment } from "@/lib/payments/server";
+import {
+  getApplicationOrigin,
+  isPaymentReference,
+  PaymentValidationError,
+  type VerifiedPayment,
+} from "@/lib/payments/validation";
 
-/**
- * Payment verification callback — Paystack redirects here after payment
- * Per Doc 03: On payment success → redirect to /exams/[exam]/subjects
- */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
-  const reference = searchParams.get("reference");
-  const trxref = searchParams.get("trxref");
-
-  const ref = reference || trxref;
-
-  if (!ref) {
+  let origin: string;
+  try {
+    origin = getApplicationOrigin(request.url, {
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    });
+  } catch {
+    return NextResponse.json({ error: "Payment callbacks are not configured." }, { status: 503 });
+  }
+  const params = new URL(request.url).searchParams;
+  const reference = params.get("reference") || params.get("trxref");
+  if (!isPaymentReference(reference)) {
     return NextResponse.redirect(`${origin}/dashboard?payment=failed`);
   }
 
+  let payment: VerifiedPayment | undefined;
   try {
-    // Verify with Paystack
-    const verifyResponse = await fetch(
-      `https://api.paystack.co/transaction/verify/${ref}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-        },
-      }
-    );
-
-    const verifyData = await verifyResponse.json();
-
-    if (verifyData.status && verifyData.data.status === "success") {
-      const examSlug = verifyData.data.metadata?.exam_slug;
-
-      if (examSlug) {
-        // Per Doc 03: After payment success → /exams/[exam]/subjects
-        return NextResponse.redirect(
-          `${origin}/exams/${examSlug}/subjects?payment=success`
-        );
-      }
-
-      return NextResponse.redirect(`${origin}/dashboard?payment=success`);
+    const supabase = await createServerSupabase();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error || !user) {
+      const callback = `/api/payments/verify?reference=${encodeURIComponent(reference)}`;
+      return NextResponse.redirect(`${origin}/login?redirect=${encodeURIComponent(callback)}`);
     }
 
-    // Payment failed
-    return NextResponse.redirect(`${origin}/dashboard?payment=failed`);
-  } catch {
-    return NextResponse.redirect(`${origin}/dashboard?payment=error`);
+    payment = await verifyPaystackPayment(reference, user.id);
+    // Complete access before redirecting; webhook delivery may arrive after the callback.
+    await grantExamAccess(payment);
+    return NextResponse.redirect(`${origin}/exams/${payment.examSlug}/subjects?payment=success`);
+  } catch (error) {
+    if (payment) {
+      const retry = new URL(`/pay/${payment.examSlug}`, origin);
+      retry.searchParams.set("payment", "pending");
+      retry.searchParams.set("reference", reference);
+      return NextResponse.redirect(retry);
+    }
+    return NextResponse.redirect(
+      `${origin}/dashboard?payment=${error instanceof PaymentValidationError ? "failed" : "error"}`,
+    );
   }
 }

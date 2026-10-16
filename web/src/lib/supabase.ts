@@ -1,27 +1,27 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "@/types/database";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 /**
  * Browser-side Supabase client (used in Client Components)
- * Uses the anon key — RLS policies apply
- * Note: Falls back to placeholder values so the app doesn't crash
- * when env vars aren't set (e.g., during preview deployments)
+ * Cookie storage is shared with middleware and route handlers. The previous
+ * localStorage-only client left authenticated browsers anonymous on the server.
+ * Placeholders allow public pages to render without configuration; auth actions
+ * explicitly reject that state instead of attempting requests to a fake project.
  */
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+export const supabase = createBrowserClient<Database>(
+  supabaseUrl || "https://placeholder.supabase.co",
+  supabaseAnonKey || "placeholder-key",
+);
 
-/**
- * Server-side Supabase client (used in API routes / Server Actions)
- * Uses the service role key — bypasses RLS (admin operations only)
- */
-export function createAdminClient() {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  return createClient<Database>(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+export function requireSupabaseConfiguration() {
+  if (!isSupabaseConfigured) {
+    throw new Error(
+      "Sign-in is not configured yet. Please try again once the service is available.",
+    );
+  }
 }

@@ -1,167 +1,266 @@
 "use client";
 
-/**
- * Dashboard Page — matches the reference image layout:
- * 1. Hero banner (subject preview + continue course)
- * 2. Courses you're taking (UTME + WAEC subjects with progress)
- * 3. My Progress (study time chart + courses completed + performance)
- */
-
 import Link from "next/link";
-import { Play, ChevronDown } from "lucide-react";
-import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { ArrowRight, BookOpen, CalendarDays, CheckCircle2, Target } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { supabase } from "@/lib/supabase";
+import { summarizeAttempts } from "@/lib/study-progress";
+import { EXAMS } from "@shared/constants/exams";
+import type { ExamSlug } from "@/types/database";
 
-const LockedSection = dynamic(() => import("@/components/dashboard/LockedSection"), { ssr: false });
+interface RecentAttempt {
+  id: string;
+  score: number;
+  completed_at: string | null;
+  exams: { name: string; slug: ExamSlug } | null;
+}
 
-const courses = [
-  { name: "Mathematics", hours: 38, progress: 72, status: "In progress", color: "from-brand-teal to-brand-aqua" },
-  { name: "English Language", hours: 24, progress: 55, status: "In progress", color: "from-brand-purple to-brand-violet" },
-  { name: "Physics", hours: 42, progress: 85, status: "In progress", color: "from-brand-ocean to-brand-surf" },
-  { name: "Chemistry", hours: 19, progress: 30, status: "In progress", color: "from-brand-french to-brand-teal" },
-];
-
-const progressBars = [
-  { day: "Mon", height: "60%" },
-  { day: "Tue", height: "80%" },
-  { day: "Wed", height: "45%" },
-  { day: "Thu", height: "90%" },
-  { day: "Fri", height: "70%" },
-  { day: "Sat", height: "35%" },
-  { day: "Sun", height: "55%" },
-];
+function PaymentNotice() {
+  const paymentStatus = useSearchParams().get("payment");
+  if (paymentStatus !== "failed" && paymentStatus !== "error") return null;
+  return (
+    <section className="dash-card border-warning/40" aria-label="Payment status">
+      <p
+        role="alert"
+        className="text-sm leading-relaxed text-text-primary dark:text-text-dark-primary"
+      >
+        {paymentStatus === "failed"
+          ? "We could not confirm a valid payment for this account. Check your exam access before trying again. If you were charged, keep your payment reference."
+          : "We could not verify your payment. Check your exam access before paying again. If you were charged, keep your payment reference."}
+      </p>
+      <div className="mt-4 flex flex-wrap items-center gap-4">
+        <Link href="/exams" className="btn-secondary">
+          Check exam access
+        </Link>
+        <Link
+          href="/dashboard"
+          replace
+          scroll={false}
+          className="inline-flex min-h-touch items-center text-sm text-text-muted dark:text-text-dark-muted"
+        >
+          Dismiss
+        </Link>
+      </div>
+    </section>
+  );
+}
 
 export default function DashboardPage() {
+  const { user, loading } = useAuth();
+  const { profile } = useProfile();
+  const attemptsQuery = useQuery({
+    queryKey: ["dashboard-attempts", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      if (!user) return { attempts: [] as RecentAttempt[], count: 0 };
+      const { data, count, error } = await supabase
+        .from("mock_attempts")
+        .select("id, score, completed_at, exams(name, slug)", { count: "exact" })
+        .eq("user_id", user.id)
+        .not("completed_at", "is", null)
+        .order("completed_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return { attempts: (data || []) as unknown as RecentAttempt[], count: count ?? 0 };
+    },
+  });
+  const summary = summarizeAttempts(attemptsQuery.data?.attempts || []);
+  const firstName = profile?.name?.trim().split(/\s+/)[0];
+
   return (
-    <div className="space-y-6">
-      {/* ═══ HERO BANNER — Subject preview + Continue Course ═══ */}
-      <section className="dash-card relative overflow-hidden min-h-[200px] flex flex-col justify-end">
-        <div className="absolute inset-0 bg-gradient-hero rounded-section" />
-        <div className="absolute top-6 right-10 w-32 h-32 bg-brand-surf/10 rounded-full blur-[60px] animate-float" />
-        <div className="absolute bottom-4 right-1/4 w-24 h-24 bg-brand-purple/15 rounded-full blur-[50px] animate-float" style={{ animationDelay: "2s" }} />
-
-        <div className="relative z-10 p-6">
-          <span className="inline-block px-3 py-1 rounded-pill text-xs font-bold bg-brand-surf/20 text-brand-aqua border border-brand-surf/30 mb-3">
-            Physics
-          </span>
-          <h2 className="font-heading text-2xl sm:text-3xl font-black text-white leading-tight max-w-md">
-            The study of the structure of matter.
-          </h2>
-          <div className="flex items-center gap-4 mt-4">
-            <Link href="/exams/jamb/subjects" className="flex items-center gap-2 text-brand-frost/80 text-sm hover:text-brand-aqua transition-colors font-medium">
-              <Play className="w-4 h-4" fill="currentColor" />
-              CONTINUE COURSE
-            </Link>
-          </div>
+    <div className="space-y-8">
+      <Suspense fallback={null}>
+        <PaymentNotice />
+      </Suspense>
+      <header className="flex flex-wrap items-end justify-between gap-5 border-b border-brand-teal/15 pb-7 dark:border-brand-frost/15">
+        <div>
+          <p className="page-kicker">Your study desk</p>
+          <h1 className="page-title">
+            {firstName ? `${firstName}, keep moving forward.` : "One topic closer to exam day."}
+          </h1>
+          <p className="page-intro mt-3">
+            Practise with purpose. Review what you miss. Build confidence one session at a time.
+          </p>
         </div>
-      </section>
-
-      {/* ═══ TWO-COLUMN: Courses + Progress ═══ */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Courses you're taking — LEFT (3/5) */}
-        <div className="lg:col-span-3">
-          <LockedSection title="Your Courses">
+        <Link href="/exams" className="btn-primary gap-2">
+          Start practising
+          <ArrowRight size={17} />
+        </Link>
+      </header>
+      {!loading && !user ? (
+        <section className="dash-card">
+          <h2 className="font-heading text-2xl font-bold text-text-primary dark:text-text-dark-primary">
+            Your progress belongs here.
+          </h2>
+          <p className="page-intro mt-3">
+            Sign in to save mock results and see how your preparation is taking shape.
+          </p>
+          <Link href="/login" className="btn-secondary mt-5">
+            Sign in to your account
+          </Link>
+        </section>
+      ) : (
+        <section aria-labelledby="progress-title">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <h2
+              id="progress-title"
+              className="font-heading text-xl font-bold text-text-primary dark:text-text-dark-primary"
+            >
+              The work you&apos;ve put in
+            </h2>
+            <p className="text-xs text-text-muted dark:text-text-dark-muted">
+              Scores reflect your latest 20 completed mocks.
+            </p>
+          </div>
+          {loading || attemptsQuery.isLoading ? (
+            <p role="status" className="dash-card page-intro">
+              Loading your results…
+            </p>
+          ) : attemptsQuery.isError ? (
             <div className="dash-card">
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="font-heading font-bold text-base text-text-primary dark:text-text-dark-primary">
-                  Courses you&apos;re taking
-                </h3>
-                <button className="flex items-center gap-1 text-xs text-text-muted dark:text-text-dark-muted hover:text-brand-surf transition-colors">
-                  Filter by <ChevronDown className="w-3 h-3" />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {courses.map((course) => (
-                  <div
-                    key={course.name}
-                    className="flex items-center gap-4 p-3 rounded-card border border-brand-teal/[0.06] dark:border-brand-frost/[0.04] hover:border-brand-surf/20 transition-all duration-300"
-                  >
-                    <div className={`w-10 h-10 rounded-btn bg-gradient-to-br ${course.color} flex items-center justify-center flex-shrink-0`}>
-                      <span className="text-white font-bold text-xs">{course.name.charAt(0)}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-body font-medium text-sm text-text-primary dark:text-text-dark-primary truncate">
-                        {course.name}
-                      </p>
-                      <p className="text-xs text-text-muted dark:text-text-dark-muted mt-0.5">
-                        {course.hours} hours spent &middot; {course.progress}%
-                      </p>
-                      <div className="progress-bar mt-2">
-                        <div className="progress-bar-fill" style={{ width: `${course.progress}%` }} />
+              <p role="alert" className="text-sm text-danger">
+                Your results could not be loaded. Your saved progress has not been changed.
+              </p>
+              <button className="btn-secondary mt-4" onClick={() => void attemptsQuery.refetch()}>
+                Try again
+              </button>
+            </div>
+          ) : (
+            <>
+              <dl className="grid grid-cols-1 divide-y divide-brand-teal/15 border-y border-brand-teal/15 dark:divide-brand-frost/15 dark:border-brand-frost/15 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                {[
+                  {
+                    label: "Completed mocks",
+                    value: attemptsQuery.data?.count ?? 0,
+                    icon: CheckCircle2,
+                  },
+                  {
+                    label: "Recent average",
+                    value: summary.average === null ? "—" : `${summary.average}%`,
+                    icon: Target,
+                  },
+                  {
+                    label: "Recent best",
+                    value: summary.best === null ? "—" : `${summary.best}%`,
+                    icon: BookOpen,
+                  },
+                ].map((stat) => (
+                  <div key={stat.label} className="px-2 py-6 sm:px-6">
+                    <dt className="flex items-center gap-2 text-sm text-text-muted dark:text-text-dark-muted">
+                      <stat.icon size={16} />
+                      {stat.label}
+                    </dt>
+                    <dd className="mt-3 font-heading text-4xl font-bold tracking-tight text-text-primary dark:text-text-dark-primary">
+                      {stat.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              {summary.completed.length === 0 ? (
+                <p className="mt-5 text-sm text-text-muted dark:text-text-dark-muted">
+                  Your first completed mock will start the story. Choose an exam below when
+                  you&apos;re ready.
+                </p>
+              ) : (
+                <div className="mt-6 divide-y divide-brand-teal/10 dark:divide-brand-frost/10">
+                  {summary.completed.slice(0, 5).map((attempt) => (
+                    <div key={attempt.id} className="flex items-center justify-between gap-4 py-4">
+                      <div>
+                        <p className="font-medium text-text-primary dark:text-text-dark-primary">
+                          {attempt.exams?.name || "Mock exam"}
+                        </p>
+                        <p className="mt-1 text-xs text-text-muted dark:text-text-dark-muted">
+                          {new Date(attempt.completed_at!).toLocaleDateString("en-NG", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="font-heading text-xl font-bold text-text-primary dark:text-text-dark-primary">
+                          {attempt.score}%
+                        </span>
+                        {attempt.exams?.slug && EXAMS[attempt.exams.slug] && (
+                          <Link
+                            href={`/exams/${attempt.exams.slug}/results?attempt=${encodeURIComponent(attempt.id)}`}
+                            aria-label={`Review ${attempt.exams.name} result`}
+                            className="btn-secondary px-3"
+                          >
+                            <ArrowRight size={16} />
+                          </Link>
+                        )}
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-pill bg-brand-surf/10 text-brand-surf border border-brand-surf/20 whitespace-nowrap">
-                      {course.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </LockedSection>
-        </div>
-
-        {/* My Progress — RIGHT (2/5) */}
-        <div className="lg:col-span-2 space-y-5">
-          {/* Study time chart */}
-          <LockedSection title="Study Analytics">
-            <div className="dash-card">
-              <h3 className="font-heading font-bold text-sm text-text-primary dark:text-text-dark-primary mb-4">
-                Track your study time
-              </h3>
-              <div className="flex items-end gap-2 h-28">
-                {progressBars.map((bar) => (
-                  <div key={bar.day} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="w-full rounded-t bg-gradient-to-t from-brand-teal to-brand-surf transition-all duration-700" style={{ height: bar.height }} />
-                    <span className="text-[9px] text-text-muted dark:text-text-dark-muted">{bar.day}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 text-center">
-                <span className="text-3xl font-heading font-black text-text-primary dark:text-text-dark-primary">124</span>
-                <span className="text-xs text-text-muted dark:text-text-dark-muted ml-1">Hours</span>
-              </div>
-            </div>
-          </LockedSection>
-
-          {/* Courses completed */}
-          <LockedSection title="Achievements">
-            <div className="dash-card flex items-center justify-between">
-              <div>
-                <p className="text-xs text-text-muted dark:text-text-dark-muted">Courses completed</p>
-                <p className="text-4xl font-heading font-black text-text-primary dark:text-text-dark-primary mt-1">36</p>
-                <p className="text-[10px] text-brand-surf mt-1">76% completion rate</p>
-              </div>
-              <div className="w-16 h-16 rounded-full border-4 border-brand-surf/30 flex items-center justify-center">
-                <span className="text-sm font-bold text-brand-surf">76%</span>
-              </div>
-            </div>
-          </LockedSection>
-
-          {/* Performance graph */}
-          <LockedSection title="Performance">
-            <div className="dash-card">
-              <h3 className="font-heading font-bold text-sm text-text-primary dark:text-text-dark-primary mb-3">
-                Performance
-              </h3>
-              <svg viewBox="0 0 200 50" className="w-full h-12 overflow-visible">
-                <path
-                  d="M0,40 C20,35 40,10 60,20 C80,30 100,5 120,15 C140,25 160,8 180,12 L200,10"
-                  fill="none"
-                  stroke="url(#perfGrad2)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      )}
+      <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
+        <section className="dash-card">
+          <p className="page-kicker">Make your next move</p>
+          <h2 className="mt-2 font-heading text-2xl font-bold text-text-primary dark:text-text-dark-primary">
+            Good preparation has a rhythm.
+          </h2>
+          <div className="mt-6 space-y-5">
+            {[
+              {
+                number: "01",
+                title: "Work through past questions",
+                body: "Find your footing in a subject, then review the explanation behind each answer.",
+                href: "/past-questions",
+              },
+              {
+                number: "02",
+                title: "Test yourself against the clock",
+                body: "Use a timed mock to practise focus and discover what needs another look.",
+                href: "/exams",
+              },
+            ].map((step) => (
+              <Link key={step.number} href={step.href} className="group flex items-start gap-4">
+                <span className="pt-1 font-mono text-xs text-brand-teal dark:text-brand-surf">
+                  {step.number}
+                </span>
+                <div className="flex-1">
+                  <h3 className="font-medium text-text-primary group-hover:text-brand-teal dark:text-text-dark-primary dark:group-hover:text-brand-surf">
+                    {step.title}
+                  </h3>
+                  <p className="mt-1 text-sm leading-relaxed text-text-muted dark:text-text-dark-muted">
+                    {step.body}
+                  </p>
+                </div>
+                <ArrowRight
+                  size={17}
+                  className="mt-1 shrink-0 text-text-muted dark:text-text-dark-muted"
                 />
-                <defs>
-                  <linearGradient id="perfGrad2" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#6C3AE0" />
-                    <stop offset="50%" stopColor="#00b4d8" />
-                    <stop offset="100%" stopColor="#48cae4" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-          </LockedSection>
-        </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+        <section className="dash-card flex flex-col items-start">
+          <CalendarDays
+            className="mb-6 text-brand-teal dark:text-brand-surf"
+            size={27}
+            strokeWidth={1.5}
+          />
+          <h2 className="font-heading text-2xl font-bold text-text-primary dark:text-text-dark-primary">
+            Give your week a plan.
+          </h2>
+          <p className="page-intro mb-6 mt-3">
+            A few focused sessions can be easier to keep than a long list of good intentions.
+          </p>
+          <Link href="/schedule" className="btn-secondary mt-auto gap-2">
+            Plan your study week
+            <ArrowRight size={16} />
+          </Link>
+        </section>
       </div>
     </div>
   );

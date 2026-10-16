@@ -1,75 +1,133 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors, Spacing, FontSize, BorderRadius } from "@/src/constants/theme";
-
+import { useEffect, useRef, useState } from "react";
+import { router } from "expo-router";
+import { Alert, KeyboardAvoidingView, Platform, Text, View } from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button, Field, Heading, Notice, Screen, ui } from "../../src/components/ui";
+import { useAuth } from "../../src/providers/AuthProvider";
+import { useProfile } from "../../src/lib/study-data";
+import { supabase } from "../../src/lib/supabase";
 export default function SettingsScreen() {
+  const { session } = useAuth();
+  const { data: profile } = useProfile();
+  const queryClient = useQueryClient();
+  const [name, setName] = useState(profile?.name || "");
+  const [busy, setBusy] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const submitting = useRef(false);
+  useEffect(() => {
+    setName(profile?.name || "");
+  }, [profile?.name]);
+  async function saveName() {
+    if (!supabase || !session || submitting.current) return;
+    if (!name.trim() || name.trim().length > 100) {
+      setError("Enter a name between 1 and 100 characters.");
+      return;
+    }
+    submitting.current = true;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const { error: saveError } = await supabase
+        .from("users")
+        .update({ name: name.trim() })
+        .eq("id", session.user.id)
+        .select("id")
+        .single();
+      if (saveError) throw saveError;
+      await queryClient.invalidateQueries({ queryKey: ["profile", session.user.id] });
+      setMessage("Your name has been updated.");
+    } catch {
+      setError("Your changes couldn't be saved. Check your connection and try again.");
+    } finally {
+      submitting.current = false;
+      setBusy(false);
+    }
+  }
+  async function signOut() {
+    if (!supabase || submitting.current) return;
+    submitting.current = true;
+    setLoggingOut(true);
+    setError("");
+    setMessage("");
+    try {
+      const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
+      if (signOutError) throw signOutError;
+    } catch {
+      setError("We couldn't sign you out. Please try again.");
+    } finally {
+      submitting.current = false;
+      setLoggingOut(false);
+    }
+  }
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Settings</Text>
-      </View>
-
-      <View style={styles.section}>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuText}>Account</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuText}>Notifications</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuText}>Storage</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuText}>About CrysLearn</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.menuItem, styles.logoutItem]}>
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <Screen>
+        <Heading
+          eyebrow="Your space"
+          title="Learning, on your terms."
+          description="Manage the profile used across your CrysLearn account."
+        />
+        <View style={ui.card}>
+          <Text style={ui.eyebrow}>{profile?.role || "student"} account</Text>
+          <Text selectable style={ui.body}>
+            {session?.user.email}
+          </Text>
+          <Field
+            label="Your name"
+            value={name}
+            onChangeText={setName}
+            maxLength={100}
+            autoComplete="name"
+            editable={!busy && !loggingOut}
+          />
+          <Button
+            title="Save name"
+            busy={busy}
+            disabled={loggingOut || name.trim() === profile?.name}
+            onPress={() => {
+              void saveName();
+            }}
+          />
+          {error && <Notice error message={error} />}
+          {message && <Notice message={message} />}
+        </View>
+        <Button
+          title="Update learning profile"
+          secondary
+          disabled={busy || loggingOut}
+          onPress={() => router.push("/(auth)/onboarding")}
+        />
+        <View style={ui.rule} />
+        <Button
+          title="About CrysLearn"
+          secondary
+          onPress={() =>
+            Alert.alert(
+              "CrysLearn",
+              "Learn with clarity. Score with confidence.\n\nA focused study companion for UTME and WAEC preparation. Mobile version 1.0.0.",
+            )
+          }
+        />
+        <Button
+          title="Sign out of this device"
+          secondary
+          busy={loggingOut}
+          disabled={busy}
+          onPress={() => {
+            void signOut();
+          }}
+        />
+        <Text style={ui.small}>
+          Signing out removes this device's session. Your profile and saved results stay in your
+          account.
+        </Text>
+      </Screen>
+    </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.dark,
-  },
-  header: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
-  title: {
-    color: Colors.text.dark,
-    fontSize: FontSize.xxl,
-    fontWeight: "700",
-  },
-  section: {
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.xs,
-  },
-  menuItem: {
-    backgroundColor: Colors.border.dark + "40",
-    borderRadius: BorderRadius.card,
-    padding: Spacing.lg,
-    minHeight: 44,
-    justifyContent: "center",
-  },
-  menuText: {
-    color: Colors.text.dark,
-    fontSize: FontSize.md,
-    fontWeight: "500",
-  },
-  logoutItem: {
-    marginTop: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.danger + "40",
-    backgroundColor: Colors.danger + "10",
-  },
-  logoutText: {
-    color: Colors.danger,
-    fontSize: FontSize.md,
-    fontWeight: "600",
-  },
-});
