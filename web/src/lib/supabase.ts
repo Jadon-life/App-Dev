@@ -1,27 +1,18 @@
+import { createBrowserClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key";
 
-/**
- * Browser-side Supabase client (used in Client Components)
- * Uses the anon key — RLS policies apply
- * Note: Falls back to placeholder values so the app doesn't crash
- * when env vars aren't set (e.g., during preview deployments)
- */
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+// Share auth sessions through cookies so SSR, middleware and route handlers
+// recognize the same user as the browser.
+export const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
 
-/**
- * Server-side Supabase client (used in API routes / Server Actions)
- * Uses the service role key — bypasses RLS (admin operations only)
- */
 export function createAdminClient() {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
   return createClient<Database>(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
+    auth: { autoRefreshToken: false, persistSession: false },
   });
 }
